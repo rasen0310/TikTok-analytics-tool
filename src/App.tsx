@@ -6,7 +6,7 @@ import { DateRangeSelector } from './components/DateRangeSelector';
 import { SummaryCards } from './components/SummaryCards';
 import { VideoTable } from './components/VideoTable';
 import { AnalyticsChart } from './components/AnalyticsChart';
-import { mockVideos, mockSummary } from './data/mockData';
+import { mockVideos, calculateSummary } from './data/mockData';
 import type { TikTokVideo, AnalyticsSummary } from './types';
 
 const theme = createTheme({
@@ -74,7 +74,8 @@ function App() {
       });
       
       setVideos(filteredVideos);
-      setSummary(mockSummary);
+      // フィルタリングされたデータに基づいてサマリーを計算
+      setSummary(calculateSummary(filteredVideos));
       setLoading(false);
     }, 500);
   };

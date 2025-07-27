@@ -1,79 +1,66 @@
 import type { TikTokVideo, AnalyticsSummary } from '../types';
 
-export const mockVideos: TikTokVideo[] = [
-  {
-    id: '1',
-    videoUrl: 'https://www.tiktok.com/@user/video/123456789',
-    postDate: '2024-01-15',
-    postTime: '14:30',
-    duration: 30,
-    views: 125000,
-    likes: 8500,
-    comments: 340,
-    shares: 1200,
-    newFollowers: 450,
-    avgWatchTime: 22.5
-  },
-  {
-    id: '2',
-    videoUrl: 'https://www.tiktok.com/@user/video/123456790',
-    postDate: '2024-01-16',
-    postTime: '18:45',
-    duration: 45,
-    views: 89000,
-    likes: 6200,
-    comments: 280,
-    shares: 890,
-    newFollowers: 320,
-    avgWatchTime: 31.2
-  },
-  {
-    id: '3',
-    videoUrl: 'https://www.tiktok.com/@user/video/123456791',
-    postDate: '2024-01-17',
-    postTime: '12:15',
-    duration: 25,
-    views: 156000,
-    likes: 12000,
-    comments: 520,
-    shares: 1800,
-    newFollowers: 680,
-    avgWatchTime: 19.8
-  },
-  {
-    id: '4',
-    videoUrl: 'https://www.tiktok.com/@user/video/123456792',
-    postDate: '2024-01-18',
-    postTime: '20:30',
-    duration: 60,
-    views: 203000,
-    likes: 15600,
-    comments: 720,
-    shares: 2300,
-    newFollowers: 890,
-    avgWatchTime: 42.1
-  },
-  {
-    id: '5',
-    videoUrl: 'https://www.tiktok.com/@user/video/123456793',
-    postDate: '2024-01-19',
-    postTime: '16:00',
-    duration: 35,
-    views: 98000,
-    likes: 7800,
-    comments: 310,
-    shares: 1100,
-    newFollowers: 420,
-    avgWatchTime: 26.7
+// 過去30日間のデータを動的に生成
+const generateMockVideos = (): TikTokVideo[] => {
+  const videos: TikTokVideo[] = [];
+  const today = new Date();
+  
+  for (let i = 0; i < 30; i++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    
+    // ランダムな値を生成（リアルなデータ風に）
+    const views = Math.floor(Math.random() * 200000) + 50000;
+    const likes = Math.floor(views * (Math.random() * 0.1 + 0.05));
+    const comments = Math.floor(likes * (Math.random() * 0.05 + 0.02));
+    const shares = Math.floor(likes * (Math.random() * 0.15 + 0.05));
+    const newFollowers = Math.floor(views * (Math.random() * 0.005 + 0.001));
+    const avgWatchTime = Math.floor(Math.random() * 30) + 10;
+    const duration = [15, 30, 45, 60][Math.floor(Math.random() * 4)];
+    
+    videos.push({
+      id: `video-${i + 1}`,
+      videoUrl: `https://www.tiktok.com/@user/video/${Date.now() - i * 86400000}`,
+      postDate: date.toISOString().split('T')[0],
+      postTime: `${Math.floor(Math.random() * 24).toString().padStart(2, '0')}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
+      duration,
+      views,
+      likes,
+      comments,
+      shares,
+      newFollowers,
+      avgWatchTime
+    });
   }
-];
-
-export const mockSummary: AnalyticsSummary = {
-  totalViews: 671000,
-  totalLikes: 50100,
-  totalComments: 2170,
-  totalShares: 7290,
-  totalNewFollowers: 2760,
-  avgWatchTime: 28.46,
-  engagementRate: 8.47
+  
+  return videos.reverse(); // 古い日付から新しい日付の順に並び替え
 };
+
+export const mockVideos: TikTokVideo[] = generateMockVideos();
+
+// サマリーデータを動的に計算
+export const calculateSummary = (videos: TikTokVideo[]): AnalyticsSummary => {
+  const totalViews = videos.reduce((sum, video) => sum + video.views, 0);
+  const totalLikes = videos.reduce((sum, video) => sum + video.likes, 0);
+  const totalComments = videos.reduce((sum, video) => sum + video.comments, 0);
+  const totalShares = videos.reduce((sum, video) => sum + video.shares, 0);
+  const totalNewFollowers = videos.reduce((sum, video) => sum + video.newFollowers, 0);
+  const avgWatchTime = videos.reduce((sum, video) => sum + video.avgWatchTime, 0) / videos.length;
+  
+  // エンゲージメント率 = (いいね + コメント + シェア) / 再生回数 * 100
+  const engagementRate = totalViews > 0 
+    ? ((totalLikes + totalComments + totalShares) / totalViews) * 100 
+    : 0;
+  
+  return {
+    totalViews,
+    totalLikes,
+    totalComments,
+    totalShares,
+    totalNewFollowers,
+    avgWatchTime: Math.round(avgWatchTime * 100) / 100,
+    engagementRate: Math.round(engagementRate * 100) / 100
+  };
+};
+
+export const mockSummary: AnalyticsSummary = calculateSummary(mockVideos);
