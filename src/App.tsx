@@ -5,6 +5,7 @@ import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { CompetitorAnalysis } from './pages/CompetitorAnalysis';
 import { AIReport } from './pages/AIReport';
+import { Settings } from './pages/Settings';
 
 const theme = createTheme({
   palette: {
@@ -66,6 +67,7 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="competitor" element={<CompetitorAnalysis />} />
             <Route path="ai-report" element={<AIReport />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
       </BrowserRouter>

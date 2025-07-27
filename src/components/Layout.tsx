@@ -19,6 +19,7 @@ import {
   Analytics as AnalyticsIcon,
   Assessment as AssessmentIcon,
   Menu as MenuIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 
@@ -48,19 +49,64 @@ export const Layout: React.FC = () => {
   };
 
   const drawer = (
-    <Box>
-      <Toolbar>
-        <Typography variant="h6" noWrap sx={{ fontWeight: 'bold' }}>
-          TikTok Analytics
-        </Typography>
-      </Toolbar>
-      <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box>
+        <Toolbar>
+          <Typography variant="h6" noWrap sx={{ fontWeight: 'bold' }}>
+            TikTok Analytics
+          </Typography>
+        </Toolbar>
+        <List>
+          {menuItems.map((item) => (
+            <ListItem key={item.text} disablePadding>
+              <ListItemButton
+                selected={location.pathname === item.path}
+                onClick={() => {
+                  navigate(item.path);
+                  if (isMobile) {
+                    setMobileOpen(false);
+                  }
+                }}
+                sx={{
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(254, 44, 85, 0.08)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(254, 44, 85, 0.12)',
+                    },
+                  },
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    color: location.pathname === item.path ? '#FE2C55' : 'inherit',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text}
+                  sx={{
+                    '& .MuiListItemText-primary': {
+                      fontWeight: location.pathname === item.path ? 600 : 400,
+                      color: location.pathname === item.path ? '#FE2C55' : 'inherit',
+                    },
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+      
+      <Box sx={{ flexGrow: 1 }} />
+      
+      <Box sx={{ borderTop: '1px solid rgba(0, 0, 0, 0.12)', pb: 2 }}>
+        <List>
+          <ListItem disablePadding>
             <ListItemButton
-              selected={location.pathname === item.path}
+              selected={location.pathname === '/settings'}
               onClick={() => {
-                navigate(item.path);
+                navigate('/settings');
                 if (isMobile) {
                   setMobileOpen(false);
                 }
@@ -76,24 +122,24 @@ export const Layout: React.FC = () => {
             >
               <ListItemIcon
                 sx={{
-                  color: location.pathname === item.path ? '#FE2C55' : 'inherit',
+                  color: location.pathname === '/settings' ? '#FE2C55' : 'inherit',
                 }}
               >
-                {item.icon}
+                <SettingsIcon />
               </ListItemIcon>
               <ListItemText 
-                primary={item.text}
+                primary="設定"
                 sx={{
                   '& .MuiListItemText-primary': {
-                    fontWeight: location.pathname === item.path ? 600 : 400,
-                    color: location.pathname === item.path ? '#FE2C55' : 'inherit',
+                    fontWeight: location.pathname === '/settings' ? 600 : 400,
+                    color: location.pathname === '/settings' ? '#FE2C55' : 'inherit',
                   },
                 }}
               />
             </ListItemButton>
           </ListItem>
-        ))}
-      </List>
+        </List>
+      </Box>
     </Box>
   );
 
@@ -131,7 +177,9 @@ export const Layout: React.FC = () => {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            {menuItems.find(item => item.path === location.pathname)?.text || 'TikTok Analytics'}
+            {location.pathname === '/settings' 
+              ? '設定' 
+              : menuItems.find(item => item.path === location.pathname)?.text || 'TikTok Analytics'}
           </Typography>
         </Toolbar>
       </AppBar>
