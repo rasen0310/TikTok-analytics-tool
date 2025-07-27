@@ -29,7 +29,7 @@ interface AnalyticsChartProps {
   videos: TikTokVideo[];
 }
 
-type ChartType = 'views' | 'engagement' | 'followers';
+type ChartType = 'views' | 'likes' | 'comments' | 'shares' | 'followers' | 'watchTime' | 'duration' | 'engagement';
 
 export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
   const [chartType, setChartType] = React.useState<ChartType>('views');
@@ -60,6 +60,84 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
             },
           ],
         };
+      case 'likes':
+        return {
+          labels,
+          datasets: [
+            {
+              label: 'いいね数',
+              data: videos.map(video => video.likes),
+              borderColor: 'rgb(54, 162, 235)',
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              tension: 0.1,
+            },
+          ],
+        };
+      case 'comments':
+        return {
+          labels,
+          datasets: [
+            {
+              label: 'コメント数',
+              data: videos.map(video => video.comments),
+              borderColor: 'rgb(255, 206, 86)',
+              backgroundColor: 'rgba(255, 206, 86, 0.2)',
+              tension: 0.1,
+            },
+          ],
+        };
+      case 'shares':
+        return {
+          labels,
+          datasets: [
+            {
+              label: 'シェア数',
+              data: videos.map(video => video.shares),
+              borderColor: 'rgb(75, 192, 192)',
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              tension: 0.1,
+            },
+          ],
+        };
+      case 'followers':
+        return {
+          labels,
+          datasets: [
+            {
+              label: '新規フォロワー',
+              data: videos.map(video => video.newFollowers),
+              borderColor: 'rgb(153, 102, 255)',
+              backgroundColor: 'rgba(153, 102, 255, 0.2)',
+              tension: 0.1,
+            },
+          ],
+        };
+      case 'watchTime':
+        return {
+          labels,
+          datasets: [
+            {
+              label: '平均閲覧時間（秒）',
+              data: videos.map(video => video.avgWatchTime),
+              borderColor: 'rgb(255, 159, 64)',
+              backgroundColor: 'rgba(255, 159, 64, 0.2)',
+              tension: 0.1,
+            },
+          ],
+        };
+      case 'duration':
+        return {
+          labels,
+          datasets: [
+            {
+              label: '動画尺（秒）',
+              data: videos.map(video => video.duration),
+              borderColor: 'rgb(199, 199, 199)',
+              backgroundColor: 'rgba(199, 199, 199, 0.2)',
+              tension: 0.1,
+            },
+          ],
+        };
       case 'engagement':
         return {
           labels,
@@ -81,40 +159,52 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
             },
           ],
         };
-      case 'followers':
-        return {
-          labels,
-          datasets: [
-            {
-              label: '新規フォロワー',
-              data: videos.map(video => video.newFollowers),
-              borderColor: 'rgb(75, 192, 192)',
-              backgroundColor: 'rgba(75, 192, 192, 0.2)',
-              tension: 0.1,
-            },
-          ],
-        };
       default:
         return { labels: [], datasets: [] };
     }
   };
 
+  const getChartTitle = () => {
+    switch (chartType) {
+      case 'views': return '再生回数の推移';
+      case 'likes': return 'いいね数の推移';
+      case 'comments': return 'コメント数の推移';
+      case 'shares': return 'シェア数の推移';
+      case 'followers': return '新規フォロワー数の推移';
+      case 'watchTime': return '平均閲覧時間の推移';
+      case 'duration': return '動画尺の推移';
+      case 'engagement': return 'エンゲージメント指標の比較';
+      default: return 'データ推移';
+    }
+  };
+
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top' as const,
       },
       title: {
         display: true,
-        text: chartType === 'views' ? '再生回数の推移' : 
-              chartType === 'engagement' ? 'エンゲージメント指標' : 
-              '新規フォロワー数の推移',
+        text: getChartTitle(),
+        font: {
+          size: 16,
+          weight: 'bold' as const,
+        },
       },
     },
     scales: {
       y: {
         beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)',
+        },
+      },
+      x: {
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)',
+        },
       },
     },
   };
@@ -125,17 +215,37 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
         データ可視化
       </Typography>
       
-      <ToggleButtonGroup
-        value={chartType}
-        exclusive
-        onChange={handleChartTypeChange}
-        aria-label="chart type"
-        sx={{ mb: 2 }}
-      >
-        <ToggleButton value="views">再生回数</ToggleButton>
-        <ToggleButton value="engagement">エンゲージメント</ToggleButton>
-        <ToggleButton value="followers">フォロワー</ToggleButton>
-      </ToggleButtonGroup>
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: 1, 
+        mb: 2,
+        justifyContent: 'center'
+      }}>
+        <ToggleButtonGroup
+          value={chartType}
+          exclusive
+          onChange={handleChartTypeChange}
+          aria-label="chart type"
+          sx={{ 
+            display: 'flex',
+            flexWrap: 'wrap',
+            '& .MuiToggleButton-root': {
+              fontSize: '0.875rem',
+              padding: '6px 12px',
+            }
+          }}
+        >
+          <ToggleButton value="views">再生回数</ToggleButton>
+          <ToggleButton value="likes">いいね数</ToggleButton>
+          <ToggleButton value="comments">コメント数</ToggleButton>
+          <ToggleButton value="shares">シェア数</ToggleButton>
+          <ToggleButton value="followers">フォロワー数</ToggleButton>
+          <ToggleButton value="watchTime">閲覧時間</ToggleButton>
+          <ToggleButton value="duration">動画尺</ToggleButton>
+          <ToggleButton value="engagement">総合比較</ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
 
       <Box sx={{ 
         backgroundColor: 'white', 
