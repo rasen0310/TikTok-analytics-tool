@@ -38,24 +38,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Getting initial session...');
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        console.log('Session retrieved:', !!session);
+        console.log('Session retrieved:', !!session?.user);
         
         if (session?.user) {
-          const { data: profile, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          // Supabaseの組み込み認証ユーザー情報を直接使用
+          let userName = session.user.user_metadata?.name || session.user.email || 'ユーザー';
           
-          console.log('Profile query result:', { profile, error });
-          
-          if (profile) {
-            setUser({
-              id: profile.id,
-              email: profile.email,
-              name: profile.name,
-            });
+          // usersテーブルからプロファイル情報を取得を試行（存在する場合）
+          try {
+            const { data: profile } = await supabase
+              .from('users')
+              .select('name')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (profile?.name) {
+              userName = profile.name;
+            }
+          } catch (error) {
+            // usersテーブルが存在しない場合はignore
+            console.log('Users table not available, using auth metadata');
           }
+          
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            name: userName,
+          });
+          console.log('User set from session:', session.user.email);
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error);
@@ -70,20 +80,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        console.log('Auth state change:', _event, !!session?.user);
         if (session?.user) {
-          const { data: profile } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          // Supabaseの組み込み認証ユーザー情報を直接使用
+          let userName = session.user.user_metadata?.name || session.user.email || 'ユーザー';
           
-          if (profile) {
-            setUser({
-              id: profile.id,
-              email: profile.email,
-              name: profile.name,
-            });
+          // usersテーブルからプロファイル情報を取得を試行（存在する場合）
+          try {
+            const { data: profile } = await supabase
+              .from('users')
+              .select('name')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (profile?.name) {
+              userName = profile.name;
+            }
+          } catch (error) {
+            // usersテーブルが存在しない場合はignore
+            console.log('Users table not available, using auth metadata');
           }
+          
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            name: userName,
+          });
         } else {
           setUser(null);
         }
@@ -98,28 +120,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          name: name
+        }
+      }
     });
 
     if (error) {
       throw error;
     }
 
-    if (data.user) {
-      // Create user profile
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert([
-          {
-            id: data.user.id,
-            email: data.user.email,
-            name,
-          },
-        ]);
-
-      if (profileError) {
-        throw profileError;
-      }
-    }
+    // ユーザープロファイルはauth.userのuser_metadataに保存される
+    console.log('User signed up:', data.user?.email);
   };
 
   const login = async (email: string, password: string) => {
