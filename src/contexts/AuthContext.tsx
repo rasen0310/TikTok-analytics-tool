@@ -151,30 +151,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const DEMO_PASSWORD = 'password123';
     const DEMO_NAME = 'デモユーザー';
 
+    console.log('🚀 デモログイン開始:', DEMO_EMAIL);
+
     try {
       // まずログインを試行
+      console.log('📝 デモアカウントでログイン試行...');
       await login(DEMO_EMAIL, DEMO_PASSWORD);
-    } catch (loginError) {
+      console.log('✅ デモログイン成功');
+    } catch (loginError: any) {
+      console.log('❌ デモログイン失敗:', loginError.message);
+      console.log('🔧 アカウント作成を試行...');
+      
       // ログインに失敗した場合、アカウント作成を試行
       try {
-        await signUp(DEMO_EMAIL, DEMO_PASSWORD, DEMO_NAME);
-        
-        // アカウント作成後、少し待ってからログインを再試行
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        try {
-          await login(DEMO_EMAIL, DEMO_PASSWORD);
-        } catch (secondError) {
-          // まだログインできない場合は、メール確認が必要な可能性がある
-          throw new Error('デモアカウントが作成されました。ログインには時間がかかる場合があります。');
+        const { data, error } = await supabase.auth.signUp({
+          email: DEMO_EMAIL,
+          password: DEMO_PASSWORD,
+          options: {
+            data: {
+              name: DEMO_NAME
+            },
+            emailRedirectTo: undefined
+          }
+        });
+
+        console.log('📊 サインアップレスポンス:', { data, error });
+
+        if (error) {
+          console.log('⚠️ サインアップエラー:', error);
+          
+          // "User already registered" エラーの場合、既存アカウントでログイン試行
+          if (error.message?.includes('already') || error.message?.includes('User already registered')) {
+            console.log('🔄 既存アカウントでログイン再試行...');
+            await login(DEMO_EMAIL, DEMO_PASSWORD);
+            console.log('✅ 既存アカウントログイン成功');
+            return;
+          }
+          throw error;
         }
-      } catch (signUpError: any) {
-        // アカウントが既に存在するエラーの場合、再度ログインを試行
-        if (signUpError.message?.includes('already') || signUpError.message?.includes('存在')) {
-          await login(DEMO_EMAIL, DEMO_PASSWORD);
+
+        // アカウント作成が成功した場合
+        if (data.user && !data.user.email_confirmed_at) {
+          console.log('📧 メール確認待ちアカウントが作成されました');
+          
+          // メール確認が必要ない場合（ローカル開発など）は直接ログイン試行
+          console.log('🔄 作成後のログイン試行...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          try {
+            await login(DEMO_EMAIL, DEMO_PASSWORD);
+            console.log('✅ 作成後ログイン成功');
+          } catch (secondError: any) {
+            console.log('❌ 作成後ログイン失敗:', secondError.message);
+            
+            // 特定のエラーメッセージに基づいて対処
+            if (secondError.message?.includes('Email not confirmed')) {
+              throw new Error('デモアカウントが作成されましたが、メール確認が必要です。Supabaseの設定を確認してください。');
+            } else if (secondError.message?.includes('Invalid login credentials')) {
+              throw new Error('デモアカウントの認証情報に問題があります。Supabaseの認証設定を確認してください。');
+            } else {
+              throw new Error(`デモアカウント作成後のログインに失敗: ${secondError.message}`);
+            }
+          }
+        } else if (data.user && data.user.email_confirmed_at) {
+          console.log('✅ 確認済みアカウントが作成されました');
+          // 既に確認済みの場合はセッションが自動的に開始される
         } else {
-          throw signUpError;
+          throw new Error('アカウント作成に失敗しました');
         }
+
+      } catch (signUpError: any) {
+        console.log('🔥 サインアップ処理エラー:', signUpError);
+        throw signUpError;
       }
     }
   };
