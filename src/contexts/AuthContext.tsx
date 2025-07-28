@@ -30,27 +30,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  console.log('AuthProvider rendering, loading:', loading, 'user:', user);
+
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+      console.log('Getting initial session...');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Session retrieved:', !!session);
         
-        if (profile) {
-          setUser({
-            id: profile.id,
-            email: profile.email,
-            name: profile.name,
-          });
+        if (session?.user) {
+          const { data: profile, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          console.log('Profile query result:', { profile, error });
+          
+          if (profile) {
+            setUser({
+              id: profile.id,
+              email: profile.email,
+              name: profile.name,
+            });
+          }
         }
+      } catch (error) {
+        console.error('Error in getInitialSession:', error);
+      } finally {
+        setLoading(false);
+        console.log('Auth initialization complete');
       }
-      setLoading(false);
     };
 
     getInitialSession();

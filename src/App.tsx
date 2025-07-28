@@ -10,6 +10,7 @@ import { AIReport } from './pages/AIReport';
 import { Settings } from './pages/Settings';
 import { Login } from './pages/Login';
 import { TikTokCallback } from './pages/TikTokCallback';
+import { DebugInfo } from './debug';
 
 const theme = createTheme({
   palette: {
@@ -62,9 +63,12 @@ const theme = createTheme({
 });
 
 function App() {
+  console.log('App component rendering...');
+  
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <DebugInfo />
       <AuthProvider>
         <BrowserRouter>
           <Routes>
