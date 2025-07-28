@@ -22,6 +22,7 @@ import {
   Api as ApiIcon,
 } from '@mui/icons-material';
 import { tiktokClient } from '../lib/tiktok';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SettingsData {
   name: string;
@@ -30,11 +31,22 @@ interface SettingsData {
   tiktokAccessToken: string;
 }
 
+interface PasswordChangeData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export const Settings: React.FC = () => {
   const [tabValue, setTabValue] = React.useState(0);
   const [showAccessToken, setShowAccessToken] = React.useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = React.useState(false);
+  const [showNewPassword, setShowNewPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = React.useState(false);
   const [apiStatus, setApiStatus] = React.useState(tiktokClient.getStatus());
+  const { user, updateProfile, changePassword } = useAuth();
   const [formData, setFormData] = React.useState<SettingsData>({
     name: '',
     email: '',
@@ -42,7 +54,14 @@ export const Settings: React.FC = () => {
     tiktokAccessToken: '',
   });
 
+  const [passwordData, setPasswordData] = React.useState<PasswordChangeData>({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
   const [errors, setErrors] = React.useState<Partial<SettingsData>>({});
+  const [passwordErrors, setPasswordErrors] = React.useState<Partial<PasswordChangeData>>({});
 
   // Load saved settings on component mount
   React.useEffect(() => {
@@ -50,16 +69,22 @@ export const Settings: React.FC = () => {
     if (savedSettings) {
       const parsedSettings = JSON.parse(savedSettings);
       setFormData({
-        name: parsedSettings.name || '',
-        email: parsedSettings.email || '',
+        name: parsedSettings.name || user?.name || '',
+        email: parsedSettings.email || user?.email || '',
         tiktokClientKey: parsedSettings.tiktokClientKey || '',
         tiktokAccessToken: parsedSettings.tiktokAccessToken || '',
       });
+    } else if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name,
+        email: user.email,
+      }));
     }
     
     // APIステータスを初期化
     setApiStatus(tiktokClient.getStatus());
-  }, []);
+  }, [user]);
 
   const handleChange = (field: keyof SettingsData) => (
     event: React.ChangeEvent<HTMLInputElement>
@@ -95,18 +120,25 @@ export const Settings: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (validateForm()) {
-      // Save to localStorage
-      localStorage.setItem('tiktokAnalyticsSettings', JSON.stringify(formData));
-      
-      // TikTokクライアントを再初期化（APIキーが変更された場合）
-      tiktokClient.reinitialize();
-      setApiStatus(tiktokClient.getStatus());
-      
-      setSaved(true);
-      // Auto-hide success message after 3 seconds
-      setTimeout(() => setSaved(false), 3000);
+      try {
+        // プロフィール情報を更新
+        await updateProfile(formData.name, formData.email);
+        
+        // ローカルストレージにAPI設定を保存
+        localStorage.setItem('tiktokAnalyticsSettings', JSON.stringify(formData));
+        
+        // TikTokクライアントを再初期化（APIキーが変更された場合）
+        tiktokClient.reinitialize();
+        setApiStatus(tiktokClient.getStatus());
+        
+        setSaved(true);
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => setSaved(false), 3000);
+      } catch (error) {
+        console.error('プロフィール更新エラー:', error);
+      }
     }
   };
 
@@ -115,6 +147,64 @@ export const Settings: React.FC = () => {
     setShowAccessToken(!showAccessToken);
   };
 
+  const handlePasswordChange = (field: keyof PasswordChangeData) => (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setPasswordData({
+      ...passwordData,
+      [field]: event.target.value,
+    });
+    // Clear error when user starts typing
+    if (passwordErrors[field]) {
+      setPasswordErrors({
+        ...passwordErrors,
+        [field]: undefined,
+      });
+    }
+    setPasswordChangeSuccess(false);
+  };
+
+  const validatePasswordChange = (): boolean => {
+    const newErrors: Partial<PasswordChangeData> = {};
+
+    if (!passwordData.currentPassword.trim()) {
+      newErrors.currentPassword = '現在のパスワードを入力してください';
+    }
+
+    if (!passwordData.newPassword.trim()) {
+      newErrors.newPassword = '新しいパスワードを入力してください';
+    } else if (passwordData.newPassword.length < 6) {
+      newErrors.newPassword = 'パスワードは6文字以上で入力してください';
+    }
+
+    if (!passwordData.confirmPassword.trim()) {
+      newErrors.confirmPassword = 'パスワード確認を入力してください';
+    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
+      newErrors.confirmPassword = 'パスワードが一致しません';
+    }
+
+    setPasswordErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handlePasswordSave = async () => {
+    if (validatePasswordChange()) {
+      try {
+        await changePassword(passwordData.currentPassword, passwordData.newPassword);
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        setPasswordChangeSuccess(true);
+        setTimeout(() => setPasswordChangeSuccess(false), 3000);
+      } catch (error) {
+        setPasswordErrors({
+          currentPassword: error instanceof Error ? error.message : 'パスワード変更に失敗しました'
+        });
+      }
+    }
+  };
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -142,6 +232,7 @@ export const Settings: React.FC = () => {
           >
             <Tab label="アカウント情報" />
             <Tab label="API設定" />
+            <Tab label="パスワード変更" />
           </Tabs>
         </Paper>
 
@@ -342,6 +433,117 @@ export const Settings: React.FC = () => {
           </Paper>
         )}
 
+        {tabValue === 2 && (
+          <Paper sx={{ p: 4 }}>
+            <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+              パスワード変更
+            </Typography>
+
+            <Stack spacing={3}>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                セキュリティのため、現在のパスワードを入力してから新しいパスワードを設定してください。
+              </Alert>
+
+              <TextField
+                fullWidth
+                label="現在のパスワード"
+                type={showCurrentPassword ? 'text' : 'password'}
+                value={passwordData.currentPassword}
+                onChange={handlePasswordChange('currentPassword')}
+                error={!!passwordErrors.currentPassword}
+                helperText={passwordErrors.currentPassword}
+                placeholder="現在のパスワードを入力"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle current password visibility"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        edge="end"
+                      >
+                        {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <TextField
+                fullWidth
+                label="新しいパスワード"
+                type={showNewPassword ? 'text' : 'password'}
+                value={passwordData.newPassword}
+                onChange={handlePasswordChange('newPassword')}
+                error={!!passwordErrors.newPassword}
+                helperText={passwordErrors.newPassword || '6文字以上で入力してください'}
+                placeholder="新しいパスワードを入力"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle new password visibility"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        edge="end"
+                      >
+                        {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <TextField
+                fullWidth
+                label="新しいパスワード（確認）"
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordChange('confirmPassword')}
+                error={!!passwordErrors.confirmPassword}
+                helperText={passwordErrors.confirmPassword}
+                placeholder="新しいパスワードを再入力"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle confirm password visibility"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        edge="end"
+                      >
+                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<SaveIcon />}
+                  onClick={handlePasswordSave}
+                  sx={{
+                    backgroundColor: '#FE2C55',
+                    '&:hover': {
+                      backgroundColor: '#E01E45',
+                    },
+                  }}
+                >
+                  パスワードを変更
+                </Button>
+              </Box>
+
+              {passwordChangeSuccess && (
+                <Alert severity="success" sx={{ mt: 2 }}>
+                  パスワードが正常に変更されました
+                </Alert>
+              )}
+            </Stack>
+          </Paper>
+        )}
 
         {tabValue === 0 && (
           <Paper sx={{ p: 4, mt: 3, backgroundColor: '#f5f5f5' }}>

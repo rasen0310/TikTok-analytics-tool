@@ -13,6 +13,7 @@ import {
   IconButton,
   useTheme,
   useMediaQuery,
+  Button,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -20,8 +21,10 @@ import {
   Assessment as AssessmentIcon,
   Menu as MenuIcon,
   Settings as SettingsIcon,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const drawerWidth = 240;
 
@@ -43,6 +46,7 @@ export const Layout: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -181,6 +185,25 @@ export const Layout: React.FC = () => {
               ? '設定' 
               : menuItems.find(item => item.path === location.pathname)?.text || 'TikTok Analytics'}
           </Typography>
+          <Box sx={{ flexGrow: 1 }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="body2" color="textSecondary">
+              {user?.name}
+            </Typography>
+            <Button
+              color="inherit"
+              startIcon={<LogoutIcon />}
+              onClick={logout}
+              sx={{
+                color: '#FE2C55',
+                '&:hover': {
+                  backgroundColor: 'rgba(254, 44, 85, 0.04)',
+                },
+              }}
+            >
+              ログアウト
+            </Button>
+          </Box>
         </Toolbar>
       </AppBar>
       <Box

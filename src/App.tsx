@@ -1,11 +1,14 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { PrivateRoute } from './components/PrivateRoute';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { CompetitorAnalysis } from './pages/CompetitorAnalysis';
 import { AIReport } from './pages/AIReport';
 import { Settings } from './pages/Settings';
+import { Login } from './pages/Login';
 
 const theme = createTheme({
   palette: {
@@ -61,16 +64,23 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="competitor" element={<CompetitorAnalysis />} />
-            <Route path="ai-report" element={<AIReport />} />
-            <Route path="settings" element={<Settings />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={
+              <PrivateRoute>
+                <Layout />
+              </PrivateRoute>
+            }>
+              <Route index element={<Dashboard />} />
+              <Route path="competitor" element={<CompetitorAnalysis />} />
+              <Route path="ai-report" element={<AIReport />} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
