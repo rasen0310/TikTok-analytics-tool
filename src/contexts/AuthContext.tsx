@@ -1,10 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, testSupabaseConnection } from '../lib/supabase';
 
 interface User {
   id: string;
   email: string;
   name?: string;
+}
+
+// Enhanced error handling types
+interface AuthResult {
+  success: boolean;
+  user?: User;
+  error?: string;
+  errorCode?: string;
+  needsEmailConfirmation?: boolean;
 }
 
 interface AuthContextType {
@@ -15,6 +24,9 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   loginWithDemo: () => Promise<void>;
+  // Enhanced methods for better error handling
+  authenticateUser: (email: string, password: string) => Promise<AuthResult>;
+  createAccount: (email: string, password: string, name: string) => Promise<AuthResult>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,10 +44,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
+    // Test Supabase connection first
+    const initializeAuth = async () => {
+      console.log('🚀 Initializing authentication system...');
+      
+      // Test connection
+      const connectionTest = await testSupabaseConnection();
+      if (!connectionTest.success) {
+        console.error('🚨 Supabase connection failed during initialization');
+        setLoading(false);
+        return;
+      }
+
+      // Get initial session
+      await getInitialSession();
+    };
+
     const getInitialSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log('📱 Getting initial session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Error getting initial session:', error);
+          setLoading(false);
+          return;
+        }
         
         if (session?.user) {
           // Supabaseの組み込み認証ユーザー情報を直接使用
@@ -69,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    getInitialSession();
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -108,34 +142,171 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, name: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name: name
-        },
-        // デモアカウントの場合は、メール確認をスキップするよう設定
-        emailRedirectTo: undefined
+  // Enhanced authentication method with detailed error handling
+  const authenticateUser = async (email: string, password: string): Promise<AuthResult> => {
+    console.log('🔐 Authenticating user:', email);
+    
+    try {
+      // Validate input
+      if (!email || !password) {
+        return {
+          success: false,
+          error: 'メールアドレスとパスワードは必須です',
+          errorCode: 'INVALID_INPUT'
+        };
       }
-    });
 
-    if (error) {
-      throw error;
+      // Attempt authentication
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password,
+      });
+
+      if (error) {
+        console.error('❌ Authentication error:', error);
+        
+        // Handle specific error types
+        const errorMessages: Record<string, string> = {
+          'Invalid login credentials': 'メールアドレスまたはパスワードが正しくありません',
+          'Email not confirmed': 'メールアドレスの確認が必要です',
+          'Too many requests': 'リクエストが多すぎます。しばらく待ってから再試行してください',
+          'User not found': 'ユーザーが見つかりません',
+          'Invalid email': 'メールアドレスの形式が正しくありません',
+        };
+
+        return {
+          success: false,
+          error: errorMessages[error.message] || `認証エラー: ${error.message}`,
+          errorCode: error.message,
+          needsEmailConfirmation: error.message.includes('Email not confirmed')
+        };
+      }
+
+      if (!data.user) {
+        return {
+          success: false,
+          error: 'ユーザー情報の取得に失敗しました',
+          errorCode: 'NO_USER_DATA'
+        };
+      }
+
+      console.log('✅ Authentication successful');
+      
+      const userData: User = {
+        id: data.user.id,
+        email: data.user.email || '',
+        name: data.user.user_metadata?.name || data.user.email || 'ユーザー',
+      };
+
+      return {
+        success: true,
+        user: userData
+      };
+
+    } catch (error) {
+      console.error('🔥 Authentication exception:', error);
+      return {
+        success: false,
+        error: `認証処理中にエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        errorCode: 'EXCEPTION'
+      };
     }
+  };
 
-    // ユーザープロファイルはauth.userのuser_metadataに保存される
+  // Enhanced account creation method
+  const createAccount = async (email: string, password: string, name: string): Promise<AuthResult> => {
+    console.log('👤 Creating account for:', email);
+    
+    try {
+      // Validate input
+      if (!email || !password || !name) {
+        return {
+          success: false,
+          error: 'すべての項目を入力してください',
+          errorCode: 'INVALID_INPUT'
+        };
+      }
+
+      // Password strength validation
+      if (password.length < 6) {
+        return {
+          success: false,
+          error: 'パスワードは6文字以上である必要があります',
+          errorCode: 'WEAK_PASSWORD'
+        };
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password,
+        options: {
+          data: {
+            name: name.trim()
+          }
+        }
+      });
+
+      if (error) {
+        console.error('❌ Account creation error:', error);
+        
+        const errorMessages: Record<string, string> = {
+          'User already registered': 'このメールアドレスは既に登録されています',
+          'Invalid email': 'メールアドレスの形式が正しくありません',
+          'Password should be at least 6 characters': 'パスワードは6文字以上である必要があります',
+          'Signup is disabled': 'アカウント作成が無効になっています',
+        };
+
+        return {
+          success: false,
+          error: errorMessages[error.message] || `アカウント作成エラー: ${error.message}`,
+          errorCode: error.message
+        };
+      }
+
+      if (!data.user) {
+        return {
+          success: false,
+          error: 'アカウントの作成に失敗しました',
+          errorCode: 'NO_USER_DATA'
+        };
+      }
+
+      console.log('✅ Account creation successful');
+
+      const userData: User = {
+        id: data.user.id,
+        email: data.user.email || '',
+        name: data.user.user_metadata?.name || name,
+      };
+
+      return {
+        success: true,
+        user: userData,
+        needsEmailConfirmation: !data.user.email_confirmed_at
+      };
+
+    } catch (error) {
+      console.error('🔥 Account creation exception:', error);
+      return {
+        success: false,
+        error: `アカウント作成中にエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        errorCode: 'EXCEPTION'
+      };
+    }
+  };
+
+  // Legacy methods for backward compatibility - now use enhanced methods
+  const signUp = async (email: string, password: string, name: string) => {
+    const result = await createAccount(email, password, name);
+    if (!result.success) {
+      throw new Error(result.error);
+    }
   };
 
   const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      throw error;
+    const result = await authenticateUser(email, password);
+    if (!result.success) {
+      throw new Error(result.error);
     }
   };
 
@@ -145,85 +316,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('tiktokAnalyticsSettings');
   };
 
-  // デモアカウント用のログイン関数
+  // Enhanced demo account login with better error handling
   const loginWithDemo = async () => {
     const DEMO_EMAIL = 'demo@example.com';
     const DEMO_PASSWORD = 'password123';
     const DEMO_NAME = 'デモユーザー';
 
-    console.log('🚀 デモログイン開始:', DEMO_EMAIL);
+    console.log('🚀 Enhanced demo login started:', DEMO_EMAIL);
 
     try {
-      // まずログインを試行
-      console.log('📝 デモアカウントでログイン試行...');
-      await login(DEMO_EMAIL, DEMO_PASSWORD);
-      console.log('✅ デモログイン成功');
-    } catch (loginError: any) {
-      console.log('❌ デモログイン失敗:', loginError.message);
-      console.log('🔧 アカウント作成を試行...');
+      // First attempt: try to authenticate existing demo account
+      console.log('📝 Attempting demo account authentication...');
+      const authResult = await authenticateUser(DEMO_EMAIL, DEMO_PASSWORD);
       
-      // ログインに失敗した場合、アカウント作成を試行
-      try {
-        const { data, error } = await supabase.auth.signUp({
-          email: DEMO_EMAIL,
-          password: DEMO_PASSWORD,
-          options: {
-            data: {
-              name: DEMO_NAME
-            },
-            emailRedirectTo: undefined
-          }
-        });
-
-        console.log('📊 サインアップレスポンス:', { data, error });
-
-        if (error) {
-          console.log('⚠️ サインアップエラー:', error);
-          
-          // "User already registered" エラーの場合、既存アカウントでログイン試行
-          if (error.message?.includes('already') || error.message?.includes('User already registered')) {
-            console.log('🔄 既存アカウントでログイン再試行...');
-            await login(DEMO_EMAIL, DEMO_PASSWORD);
-            console.log('✅ 既存アカウントログイン成功');
-            return;
-          }
-          throw error;
-        }
-
-        // アカウント作成が成功した場合
-        if (data.user && !data.user.email_confirmed_at) {
-          console.log('📧 メール確認待ちアカウントが作成されました');
-          
-          // メール確認が必要ない場合（ローカル開発など）は直接ログイン試行
-          console.log('🔄 作成後のログイン試行...');
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          try {
-            await login(DEMO_EMAIL, DEMO_PASSWORD);
-            console.log('✅ 作成後ログイン成功');
-          } catch (secondError: any) {
-            console.log('❌ 作成後ログイン失敗:', secondError.message);
-            
-            // 特定のエラーメッセージに基づいて対処
-            if (secondError.message?.includes('Email not confirmed')) {
-              throw new Error('デモアカウントが作成されましたが、メール確認が必要です。Supabaseの設定を確認してください。');
-            } else if (secondError.message?.includes('Invalid login credentials')) {
-              throw new Error('デモアカウントの認証情報に問題があります。Supabaseの認証設定を確認してください。');
-            } else {
-              throw new Error(`デモアカウント作成後のログインに失敗: ${secondError.message}`);
-            }
-          }
-        } else if (data.user && data.user.email_confirmed_at) {
-          console.log('✅ 確認済みアカウントが作成されました');
-          // 既に確認済みの場合はセッションが自動的に開始される
-        } else {
-          throw new Error('アカウント作成に失敗しました');
-        }
-
-      } catch (signUpError: any) {
-        console.log('🔥 サインアップ処理エラー:', signUpError);
-        throw signUpError;
+      if (authResult.success) {
+        console.log('✅ Demo authentication successful');
+        return;
       }
+
+      console.log('❌ Demo authentication failed:', authResult.error);
+      console.log('🔧 Attempting demo account creation...');
+
+      // Second attempt: create demo account if authentication failed
+      const createResult = await createAccount(DEMO_EMAIL, DEMO_PASSWORD, DEMO_NAME);
+      
+      if (createResult.success) {
+        console.log('✅ Demo account created successfully');
+        
+        // If email confirmation is needed, inform user
+        if (createResult.needsEmailConfirmation) {
+          throw new Error(
+            'デモアカウントが作成されましたが、メール確認が必要です。\n' +
+            'Supabaseの「Authentication → Settings」で「Enable email confirmations」を無効にしてください。'
+          );
+        }
+        
+        // Account created and ready to use
+        return;
+      }
+
+      // Third attempt: if account already exists, try authentication again
+      if (createResult.errorCode === 'User already registered') {
+        console.log('🔄 Demo account exists, retrying authentication...');
+        
+        const retryResult = await authenticateUser(DEMO_EMAIL, DEMO_PASSWORD);
+        if (retryResult.success) {
+          console.log('✅ Demo authentication successful on retry');
+          return;
+        }
+        
+        // Provide specific error message based on the authentication failure
+        if (retryResult.needsEmailConfirmation) {
+          throw new Error(
+            'デモアカウントが存在しますが、メール確認が完了していません。\n' +
+            'Supabaseの「Authentication → Settings」で「Enable email confirmations」を無効にしてください。'
+          );
+        }
+        
+        throw new Error(`デモアカウントでのログインに失敗しました: ${retryResult.error}`);
+      }
+
+      // Account creation failed for other reasons
+      throw new Error(`デモアカウントの作成に失敗しました: ${createResult.error}`);
+
+    } catch (error) {
+      console.error('🔥 Demo login process failed:', error);
+      throw error;
     }
   };
 
@@ -235,6 +393,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     loginWithDemo,
     loading,
+    // Enhanced methods
+    authenticateUser,
+    createAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
