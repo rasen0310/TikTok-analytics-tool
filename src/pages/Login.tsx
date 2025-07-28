@@ -246,7 +246,7 @@ export const Login: React.FC = () => {
 
             <Box sx={{ textAlign: 'center', mt: 2 }}>
               <Typography variant="body2" color="textSecondary">
-                デモアカウント: demo@example.com / password123
+                デモアカウント: demo.user@gmail.com / DemoPassword123!
               </Typography>
               <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
                 ※ デモアカウントが存在しない場合は自動で作成されます

@@ -318,8 +318,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Enhanced demo account login with better error handling
   const loginWithDemo = async () => {
-    const DEMO_EMAIL = 'demo@example.com';
-    const DEMO_PASSWORD = 'password123';
+    // Use a widely accepted email address format
+    const DEMO_EMAIL = 'demo.user@gmail.com';
+    const DEMO_PASSWORD = 'DemoPassword123!';
     const DEMO_NAME = 'デモユーザー';
 
     console.log('🚀 Enhanced demo login started:', DEMO_EMAIL);

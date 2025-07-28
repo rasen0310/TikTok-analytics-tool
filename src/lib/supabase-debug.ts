@@ -1,6 +1,7 @@
 // Supabase認証設定のデバッグユーティリティ
 
 import { supabase } from './supabase';
+import { validateEmailFormats, diagnoseEmailIssue, getRecommendedDemoEmail } from './email-validation';
 
 export interface SupabaseDebugInfo {
   url: string;
@@ -44,12 +45,28 @@ export const getSupabaseDebugInfo = async (): Promise<SupabaseDebugInfo> => {
 };
 
 export const testDemoAccountCreation = async () => {
-  const DEMO_EMAIL = 'demo@example.com';
-  const DEMO_PASSWORD = 'password123';
+  const DEMO_EMAIL = 'demo.user@gmail.com';
+  const DEMO_PASSWORD = 'DemoPassword123!';
   
   console.log('🧪 デモアカウント作成テスト開始');
+  console.log('📧 テスト用メールアドレス:', DEMO_EMAIL);
+  console.log('🔐 テスト用パスワード:', DEMO_PASSWORD.replace(/./g, '*'));
   
   try {
+    // 0. メールアドレス形式の事前チェック
+    console.log('0️⃣ メールアドレス形式チェック...');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValidEmail = emailRegex.test(DEMO_EMAIL);
+    console.log('📧 メールアドレス形式チェック結果:', isValidEmail ? '✅ 有効' : '❌ 無効');
+    
+    if (!isValidEmail) {
+      return {
+        success: false,
+        message: `メールアドレスの形式が無効です: ${DEMO_EMAIL}`,
+        error: 'INVALID_EMAIL_FORMAT'
+      };
+    }
+
     // 1. 既存のデモアカウントを確認
     console.log('1️⃣ 既存アカウント確認...');
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -101,6 +118,26 @@ export const testDemoAccountCreation = async () => {
         console.log('✅ 既存アカウントでログイン成功');
         await supabase.auth.signOut();
         return { success: true, message: '既存アカウントでログイン成功' };
+      }
+      
+      // メールアドレス関連のエラーの場合、詳細診断を実行
+      if (signUpError.message.includes('invalid') || signUpError.message.includes('email')) {
+        console.log('🔍 メールアドレスエラーの詳細診断...');
+        const emailValidation = validateEmailFormats(DEMO_EMAIL);
+        const emailDiagnosis = diagnoseEmailIssue(DEMO_EMAIL, signUpError.message);
+        const recommendations = getRecommendedDemoEmail();
+        
+        console.log('📧 メール検証結果:', emailValidation);
+        console.log('🩺 診断結果:', emailDiagnosis);
+        console.log('💡 推奨メールアドレス:', recommendations);
+        
+        return { 
+          success: false, 
+          message: `メールアドレスエラー: ${signUpError.message}\n\n推奨解決策:\n${emailDiagnosis.recommendations.join('\n')}\n\n推奨メールアドレス: ${recommendations.primary}`,
+          error: signUpError,
+          emailDiagnosis,
+          recommendations
+        };
       }
       
       return { 
