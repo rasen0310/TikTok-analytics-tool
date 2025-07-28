@@ -9,6 +9,7 @@ import { CompetitorAnalysis } from './pages/CompetitorAnalysis';
 import { AIReport } from './pages/AIReport';
 import { Settings } from './pages/Settings';
 import { Login } from './pages/Login';
+import { TikTokCallback } from './pages/TikTokCallback';
 
 const theme = createTheme({
   palette: {
@@ -68,6 +69,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/auth/tiktok/callback" element={<TikTokCallback />} />
             <Route
               path="/"
               element={

@@ -11,12 +11,15 @@ import {
   IconButton,
   InputAdornment,
   Divider,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   Visibility,
   VisibilityOff,
   Save as SaveIcon,
 } from '@mui/icons-material';
+import { TikTokConnect } from '../components/TikTokConnect';
 
 interface SettingsData {
   name: string;
@@ -26,6 +29,7 @@ interface SettingsData {
 }
 
 export const Settings: React.FC = () => {
+  const [tabValue, setTabValue] = React.useState(0);
   const [showPassword, setShowPassword] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [formData, setFormData] = React.useState<SettingsData>({
@@ -106,6 +110,10 @@ export const Settings: React.FC = () => {
     event.preventDefault();
   };
 
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
   return (
     <Container maxWidth="md">
       <Box sx={{ py: 4 }}>
@@ -113,7 +121,26 @@ export const Settings: React.FC = () => {
           設定
         </Typography>
 
-        <Paper sx={{ p: 4 }}>
+        <Paper sx={{ mb: 3 }}>
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            sx={{
+              borderBottom: 1,
+              borderColor: 'divider',
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 500,
+              }
+            }}
+          >
+            <Tab label="アカウント情報" />
+            <Tab label="TikTok連携" />
+          </Tabs>
+        </Paper>
+
+        {tabValue === 0 && (
+          <Paper sx={{ p: 4 }}>
           <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
             アカウント情報
           </Typography>
@@ -216,22 +243,31 @@ export const Settings: React.FC = () => {
               </Alert>
             )}
           </Stack>
-        </Paper>
+          </Paper>
+        )}
 
-        <Paper sx={{ p: 4, mt: 3, backgroundColor: '#f5f5f5' }}>
-          <Typography variant="h6" gutterBottom>
-            セキュリティに関する注意事項
-          </Typography>
-          <Typography variant="body2" color="textSecondary" paragraph>
-            • パスワードは暗号化されてローカルストレージに保存されます
-          </Typography>
-          <Typography variant="body2" color="textSecondary" paragraph>
-            • API認証情報は外部サーバーには送信されません
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            • 定期的にパスワードを変更することをお勧めします
-          </Typography>
-        </Paper>
+        {tabValue === 1 && (
+          <Paper sx={{ p: 4 }}>
+            <TikTokConnect />
+          </Paper>
+        )}
+
+        {tabValue === 0 && (
+          <Paper sx={{ p: 4, mt: 3, backgroundColor: '#f5f5f5' }}>
+            <Typography variant="h6" gutterBottom>
+              セキュリティに関する注意事項
+            </Typography>
+            <Typography variant="body2" color="textSecondary" paragraph>
+              • パスワードは暗号化されてローカルストレージに保存されます
+            </Typography>
+            <Typography variant="body2" color="textSecondary" paragraph>
+              • API認証情報は外部サーバーには送信されません
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              • 定期的にパスワードを変更することをお勧めします
+            </Typography>
+          </Paper>
+        )}
       </Box>
     </Container>
   );
