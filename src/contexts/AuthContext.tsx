@@ -30,15 +30,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  console.log('AuthProvider rendering, loading:', loading, 'user:', user);
-
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      console.log('Getting initial session...');
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        console.log('Session retrieved:', !!session?.user);
         
         if (session?.user) {
           // Supabaseの組み込み認証ユーザー情報を直接使用
@@ -57,7 +53,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } catch (error) {
             // usersテーブルが存在しない場合はignore
-            console.log('Users table not available, using auth metadata');
           }
           
           setUser({
@@ -65,13 +60,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: session.user.email || '',
             name: userName,
           });
-          console.log('User set from session:', session.user.email);
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error);
       } finally {
         setLoading(false);
-        console.log('Auth initialization complete');
       }
     };
 
@@ -80,7 +73,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        console.log('Auth state change:', _event, !!session?.user);
         if (session?.user) {
           // Supabaseの組み込み認証ユーザー情報を直接使用
           let userName = session.user.user_metadata?.name || session.user.email || 'ユーザー';
@@ -98,7 +90,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } catch (error) {
             // usersテーブルが存在しない場合はignore
-            console.log('Users table not available, using auth metadata');
           }
           
           setUser({
@@ -117,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, name: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -132,7 +123,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // ユーザープロファイルはauth.userのuser_metadataに保存される
-    console.log('User signed up:', data.user?.email);
   };
 
   const login = async (email: string, password: string) => {

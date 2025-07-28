@@ -4,20 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://bijyeptqgqkbrbopelyz.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpanllcHRxZ3FrYnJib3BlbHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2NDY3MDIsImV4cCI6MjA2OTIyMjcwMn0.uUyZ_0ixcjJ9sKizqM6E8k1i3CUUbY4RmoKhsJIzuco';
 
-console.log('Supabase config:', {
-  url: supabaseUrl ? 'Set' : 'Missing',
-  key: supabaseAnonKey ? 'Set' : 'Missing',
-  envUrl: import.meta.env.VITE_SUPABASE_URL ? 'Found' : 'Not Found',
-  envKey: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Found' : 'Not Found',
-  mode: import.meta.env.MODE,
-  dev: import.meta.env.DEV
-});
-
-// Basic validation
-if (!supabaseUrl.startsWith('https://') || !supabaseAnonKey.startsWith('eyJ')) {
-  console.error('Invalid Supabase configuration');
-}
-
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Database types
