@@ -145,10 +145,10 @@ export class TikTokMockClient implements ITikTokClient {
 
       analytics.push(videoAnalytics);
 
-      totalViews += dailyViews;
-      totalLikes += dailyLikes;
-      totalComments += dailyComments;
-      totalShares += dailyShares;
+      totalViews += video.view_count;
+      totalLikes += video.like_count;
+      totalComments += video.comment_count;
+      totalShares += video.share_count;
       totalNewFollowers += dailyNewFollowers;
       totalWatchTime += avgWatchTime;
     }

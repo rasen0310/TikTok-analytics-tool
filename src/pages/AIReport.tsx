@@ -296,37 +296,6 @@ export const AIReport: React.FC = () => {
     }
   };
 
-  const chartData = period1 && period2 ? {
-    labels: ['再生回数', 'いいね数', 'コメント数', 'シェア数', '新規フォロワー'],
-    datasets: [
-      {
-        label: formatPeriodLabel(true),
-        data: [
-          period1.summary.totalViews,
-          period1.summary.totalLikes,
-          period1.summary.totalComments,
-          period1.summary.totalShares,
-          period1.summary.totalNewFollowers,
-        ],
-        backgroundColor: 'rgba(254, 44, 85, 0.8)',
-        borderColor: 'rgba(254, 44, 85, 1)',
-        borderWidth: 1,
-      },
-      {
-        label: formatPeriodLabel(false),
-        data: [
-          period2.summary.totalViews,
-          period2.summary.totalLikes,
-          period2.summary.totalComments,
-          period2.summary.totalShares,
-          period2.summary.totalNewFollowers,
-        ],
-        backgroundColor: 'rgba(37, 244, 238, 0.8)',
-        borderColor: 'rgba(37, 244, 238, 1)',
-        borderWidth: 1,
-      },
-    ],
-  } : null;
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -521,88 +490,290 @@ export const AIReport: React.FC = () => {
                     期間比較チャート
                   </Typography>
                 </Box>
-                <Paper sx={{ p: 2, bgcolor: 'white' }}>
-                  <Box sx={{ height: 400 }}>
-                    {chartData && period1 && period2 && (
-                      <Bar
-                        data={chartData}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          plugins: {
-                            legend: {
-                              position: 'top' as const,
-                              labels: {
-                                usePointStyle: true,
-                                padding: 20,
-                                font: {
-                                  size: 14,
-                                  weight: 'bold',
-                                },
-                              },
+                
+                {period1 && period2 && (
+                  <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
+                    gap: 3 
+                  }}>
+                    {/* 再生回数 */}
+                    <Paper sx={{ p: 2, bgcolor: 'white' }}>
+                      <Typography variant="h6" align="center" sx={{ mb: 2, fontWeight: 'bold' }}>
+                        📺 再生回数
+                      </Typography>
+                      <Box sx={{ height: 200 }}>
+                        <Bar
+                          data={{
+                            labels: [formatPeriodLabel(true), formatPeriodLabel(false)],
+                            datasets: [{
+                              data: [period1.summary.totalViews, period2.summary.totalViews],
+                              backgroundColor: ['rgba(254, 44, 85, 0.8)', 'rgba(37, 244, 238, 0.8)'],
+                              borderColor: ['rgba(254, 44, 85, 1)', 'rgba(37, 244, 238, 1)'],
+                              borderWidth: 1,
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                              y: { display: false, beginAtZero: true },
+                              x: { grid: { display: false } }
                             },
-                            title: {
-                              display: true,
-                              text: `📊 ${formatPeriodLabel(true)} vs ${formatPeriodLabel(false)} の比較`,
-                              font: {
-                                size: 16,
-                                weight: 'bold',
-                              },
-                              padding: 20,
-                            },
-                          },
-                          scales: {
-                            y: {
-                              display: false,
-                              beginAtZero: true,
-                            },
-                            x: {
-                              grid: {
-                                display: false,
-                              },
-                              ticks: {
-                                font: {
-                                  size: 12,
-                                  weight: 'bold',
-                                },
-                              },
-                            },
-                          },
-                          interaction: {
-                            intersect: false,
-                            mode: 'index',
-                          },
-                          hover: {
-                            mode: 'index',
-                            intersect: false,
-                          },
-                          animation: {
-                            duration: 1000,
-                            easing: 'easeOutQuart',
-                            onComplete: function(context) {
-                              const chart = context.chart;
-                              const ctx = chart.ctx;
-                              
-                              ctx.font = 'bold 11px Arial';
-                              ctx.fillStyle = '#333';
-                              ctx.textAlign = 'center';
-                              ctx.textBaseline = 'bottom';
-
-                              chart.data.datasets.forEach((dataset, datasetIndex) => {
-                                const meta = chart.getDatasetMeta(datasetIndex);
-                                meta.data.forEach((bar, index) => {
-                                  const value = dataset.data[index] as number;
-                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value);
+                            animation: {
+                              duration: 1000,
+                              onComplete: function(context) {
+                                const chart = context.chart;
+                                const ctx = chart.ctx;
+                                ctx.font = 'bold 11px Arial';
+                                ctx.fillStyle = '#333';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                chart.data.datasets[0].data.forEach((value, index) => {
+                                  const meta = chart.getDatasetMeta(0);
+                                  const bar = meta.data[index];
+                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
                                   ctx.fillText(formattedValue, bar.x, bar.y - 5);
                                 });
-                              });
+                              }
+                            }
+                          }}
+                        />
+                      </Box>
+                    </Paper>
+
+                    {/* いいね数 */}
+                    <Paper sx={{ p: 2, bgcolor: 'white' }}>
+                      <Typography variant="h6" align="center" sx={{ mb: 2, fontWeight: 'bold' }}>
+                        ❤️ いいね数
+                      </Typography>
+                      <Box sx={{ height: 200 }}>
+                        <Bar
+                          data={{
+                            labels: [formatPeriodLabel(true), formatPeriodLabel(false)],
+                            datasets: [{
+                              data: [period1.summary.totalLikes, period2.summary.totalLikes],
+                              backgroundColor: ['rgba(254, 44, 85, 0.8)', 'rgba(37, 244, 238, 0.8)'],
+                              borderColor: ['rgba(254, 44, 85, 1)', 'rgba(37, 244, 238, 1)'],
+                              borderWidth: 1,
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                              y: { display: false, beginAtZero: true },
+                              x: { grid: { display: false } }
                             },
-                          },
-                        }}
-                      />
-                    )}
+                            animation: {
+                              duration: 1000,
+                              onComplete: function(context) {
+                                const chart = context.chart;
+                                const ctx = chart.ctx;
+                                ctx.font = 'bold 11px Arial';
+                                ctx.fillStyle = '#333';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                chart.data.datasets[0].data.forEach((value, index) => {
+                                  const meta = chart.getDatasetMeta(0);
+                                  const bar = meta.data[index];
+                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
+                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                });
+                              }
+                            }
+                          }}
+                        />
+                      </Box>
+                    </Paper>
+
+                    {/* コメント数 */}
+                    <Paper sx={{ p: 2, bgcolor: 'white' }}>
+                      <Typography variant="h6" align="center" sx={{ mb: 2, fontWeight: 'bold' }}>
+                        💬 コメント数
+                      </Typography>
+                      <Box sx={{ height: 200 }}>
+                        <Bar
+                          data={{
+                            labels: [formatPeriodLabel(true), formatPeriodLabel(false)],
+                            datasets: [{
+                              data: [period1.summary.totalComments, period2.summary.totalComments],
+                              backgroundColor: ['rgba(254, 44, 85, 0.8)', 'rgba(37, 244, 238, 0.8)'],
+                              borderColor: ['rgba(254, 44, 85, 1)', 'rgba(37, 244, 238, 1)'],
+                              borderWidth: 1,
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                              y: { display: false, beginAtZero: true },
+                              x: { grid: { display: false } }
+                            },
+                            animation: {
+                              duration: 1000,
+                              onComplete: function(context) {
+                                const chart = context.chart;
+                                const ctx = chart.ctx;
+                                ctx.font = 'bold 11px Arial';
+                                ctx.fillStyle = '#333';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                chart.data.datasets[0].data.forEach((value, index) => {
+                                  const meta = chart.getDatasetMeta(0);
+                                  const bar = meta.data[index];
+                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
+                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                });
+                              }
+                            }
+                          }}
+                        />
+                      </Box>
+                    </Paper>
+
+                    {/* シェア数 */}
+                    <Paper sx={{ p: 2, bgcolor: 'white' }}>
+                      <Typography variant="h6" align="center" sx={{ mb: 2, fontWeight: 'bold' }}>
+                        🔄 シェア数
+                      </Typography>
+                      <Box sx={{ height: 200 }}>
+                        <Bar
+                          data={{
+                            labels: [formatPeriodLabel(true), formatPeriodLabel(false)],
+                            datasets: [{
+                              data: [period1.summary.totalShares, period2.summary.totalShares],
+                              backgroundColor: ['rgba(254, 44, 85, 0.8)', 'rgba(37, 244, 238, 0.8)'],
+                              borderColor: ['rgba(254, 44, 85, 1)', 'rgba(37, 244, 238, 1)'],
+                              borderWidth: 1,
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                              y: { display: false, beginAtZero: true },
+                              x: { grid: { display: false } }
+                            },
+                            animation: {
+                              duration: 1000,
+                              onComplete: function(context) {
+                                const chart = context.chart;
+                                const ctx = chart.ctx;
+                                ctx.font = 'bold 11px Arial';
+                                ctx.fillStyle = '#333';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                chart.data.datasets[0].data.forEach((value, index) => {
+                                  const meta = chart.getDatasetMeta(0);
+                                  const bar = meta.data[index];
+                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
+                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                });
+                              }
+                            }
+                          }}
+                        />
+                      </Box>
+                    </Paper>
+
+                    {/* 新規フォロワー */}
+                    <Paper sx={{ p: 2, bgcolor: 'white' }}>
+                      <Typography variant="h6" align="center" sx={{ mb: 2, fontWeight: 'bold' }}>
+                        👥 新規フォロワー
+                      </Typography>
+                      <Box sx={{ height: 200 }}>
+                        <Bar
+                          data={{
+                            labels: [formatPeriodLabel(true), formatPeriodLabel(false)],
+                            datasets: [{
+                              data: [period1.summary.totalNewFollowers, period2.summary.totalNewFollowers],
+                              backgroundColor: ['rgba(254, 44, 85, 0.8)', 'rgba(37, 244, 238, 0.8)'],
+                              borderColor: ['rgba(254, 44, 85, 1)', 'rgba(37, 244, 238, 1)'],
+                              borderWidth: 1,
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                              y: { display: false, beginAtZero: true },
+                              x: { grid: { display: false } }
+                            },
+                            animation: {
+                              duration: 1000,
+                              onComplete: function(context) {
+                                const chart = context.chart;
+                                const ctx = chart.ctx;
+                                ctx.font = 'bold 11px Arial';
+                                ctx.fillStyle = '#333';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                chart.data.datasets[0].data.forEach((value, index) => {
+                                  const meta = chart.getDatasetMeta(0);
+                                  const bar = meta.data[index];
+                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
+                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                });
+                              }
+                            }
+                          }}
+                        />
+                      </Box>
+                    </Paper>
+
+                    {/* 平均閲覧時間 */}
+                    <Paper sx={{ p: 2, bgcolor: 'white' }}>
+                      <Typography variant="h6" align="center" sx={{ mb: 2, fontWeight: 'bold' }}>
+                        ⏱️ 平均閲覧時間
+                      </Typography>
+                      <Box sx={{ height: 200 }}>
+                        <Bar
+                          data={{
+                            labels: [formatPeriodLabel(true), formatPeriodLabel(false)],
+                            datasets: [{
+                              data: [period1.summary.avgWatchTime, period2.summary.avgWatchTime],
+                              backgroundColor: ['rgba(254, 44, 85, 0.8)', 'rgba(37, 244, 238, 0.8)'],
+                              borderColor: ['rgba(254, 44, 85, 1)', 'rgba(37, 244, 238, 1)'],
+                              borderWidth: 1,
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                              y: { display: false, beginAtZero: true },
+                              x: { grid: { display: false } }
+                            },
+                            animation: {
+                              duration: 1000,
+                              onComplete: function(context) {
+                                const chart = context.chart;
+                                const ctx = chart.ctx;
+                                ctx.font = 'bold 11px Arial';
+                                ctx.fillStyle = '#333';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                chart.data.datasets[0].data.forEach((value, index) => {
+                                  const meta = chart.getDatasetMeta(0);
+                                  const bar = meta.data[index];
+                                  const formattedValue = `${(value as number).toFixed(1)}秒`;
+                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                });
+                              }
+                            }
+                          }}
+                        />
+                      </Box>
+                    </Paper>
                   </Box>
-                </Paper>
+                )}
               </Paper>
 
               <Paper sx={{ 
