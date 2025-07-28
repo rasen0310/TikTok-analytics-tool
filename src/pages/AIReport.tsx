@@ -553,18 +553,8 @@ export const AIReport: React.FC = () => {
                           },
                           scales: {
                             y: {
+                              display: false,
                               beginAtZero: true,
-                              grid: {
-                                color: 'rgba(0,0,0,0.1)',
-                              },
-                              ticks: {
-                                font: {
-                                  size: 12,
-                                },
-                                callback: function(value) {
-                                  return new Intl.NumberFormat('ja-JP').format(value as number);
-                                },
-                              },
                             },
                             x: {
                               grid: {
