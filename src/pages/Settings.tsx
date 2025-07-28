@@ -13,30 +13,39 @@ import {
   Divider,
   Tabs,
   Tab,
+  Chip,
 } from '@mui/material';
 import {
   Visibility,
   VisibilityOff,
   Save as SaveIcon,
+  Api as ApiIcon,
 } from '@mui/icons-material';
 import { TikTokConnect } from '../components/TikTokConnect';
+import { tiktokClient } from '../lib/tiktok';
 
 interface SettingsData {
   name: string;
   email: string;
   tiktokId: string;
   password: string;
+  tiktokClientKey: string;
+  tiktokAccessToken: string;
 }
 
 export const Settings: React.FC = () => {
   const [tabValue, setTabValue] = React.useState(0);
   const [showPassword, setShowPassword] = React.useState(false);
+  const [showAccessToken, setShowAccessToken] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
+  const [apiStatus, setApiStatus] = React.useState(tiktokClient.getStatus());
   const [formData, setFormData] = React.useState<SettingsData>({
     name: '',
     email: '',
     tiktokId: '',
     password: '',
+    tiktokClientKey: '',
+    tiktokAccessToken: '',
   });
 
   const [errors, setErrors] = React.useState<Partial<SettingsData>>({});
@@ -46,8 +55,18 @@ export const Settings: React.FC = () => {
     const savedSettings = localStorage.getItem('tiktokAnalyticsSettings');
     if (savedSettings) {
       const parsedSettings = JSON.parse(savedSettings);
-      setFormData(parsedSettings);
+      setFormData({
+        name: parsedSettings.name || '',
+        email: parsedSettings.email || '',
+        tiktokId: parsedSettings.tiktokId || '',
+        password: parsedSettings.password || '',
+        tiktokClientKey: parsedSettings.tiktokClientKey || '',
+        tiktokAccessToken: parsedSettings.tiktokAccessToken || '',
+      });
     }
+    
+    // APIステータスを初期化
+    setApiStatus(tiktokClient.getStatus());
   }, []);
 
   const handleChange = (field: keyof SettingsData) => (
@@ -96,6 +115,11 @@ export const Settings: React.FC = () => {
     if (validateForm()) {
       // Save to localStorage
       localStorage.setItem('tiktokAnalyticsSettings', JSON.stringify(formData));
+      
+      // TikTokクライアントを再初期化（APIキーが変更された場合）
+      tiktokClient.reinitialize();
+      setApiStatus(tiktokClient.getStatus());
+      
       setSaved(true);
       // Auto-hide success message after 3 seconds
       setTimeout(() => setSaved(false), 3000);
@@ -104,6 +128,10 @@ export const Settings: React.FC = () => {
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleClickShowAccessToken = () => {
+    setShowAccessToken(!showAccessToken);
   };
 
   const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -135,6 +163,7 @@ export const Settings: React.FC = () => {
             }}
           >
             <Tab label="アカウント情報" />
+            <Tab label="API設定" />
             <Tab label="TikTok連携" />
           </Tabs>
         </Paper>
@@ -173,52 +202,6 @@ export const Settings: React.FC = () => {
               </Stack>
             </Box>
 
-            <Divider />
-
-            <Box>
-              <Typography variant="subtitle2" gutterBottom sx={{ mb: 1 }}>
-                TikTok API認証情報
-              </Typography>
-              <Alert severity="info" sx={{ mb: 2 }}>
-                TikTok APIを使用してデータを取得するために必要な認証情報です。
-                これらの情報は安全に保存され、API通信時のみ使用されます。
-              </Alert>
-              <Stack spacing={2}>
-                <TextField
-                  fullWidth
-                  label="TikTok ID"
-                  value={formData.tiktokId}
-                  onChange={handleChange('tiktokId')}
-                  error={!!errors.tiktokId}
-                  helperText={errors.tiktokId || 'TikTokアカウントのユーザーIDを入力してください'}
-                  placeholder="@username"
-                />
-                <TextField
-                  fullWidth
-                  label="APIパスワード"
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={handleChange('password')}
-                  error={!!errors.password}
-                  helperText={errors.password || 'TikTok API用のパスワードを入力してください'}
-                  placeholder="••••••••"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={handleClickShowPassword}
-                          onMouseDown={handleMouseDownPassword}
-                          edge="end"
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Stack>
-            </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
               <Button
@@ -247,6 +230,187 @@ export const Settings: React.FC = () => {
         )}
 
         {tabValue === 1 && (
+          <Paper sx={{ p: 4 }}>
+            <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+              TikTok API設定
+            </Typography>
+
+            {/* API ステータス表示 */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                現在のAPIステータス
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                <Chip 
+                  label={apiStatus.mode === 'development' ? 'モックデータ' : '本番API'} 
+                  color={apiStatus.mode === 'development' ? 'secondary' : 'primary'}
+                  variant="outlined"
+                  size="small"
+                />
+                <Chip 
+                  label={apiStatus.configured ? '設定済み' : '未設定'} 
+                  color={apiStatus.configured ? 'success' : 'warning'}
+                  variant="outlined"
+                  size="small"
+                />
+                <Chip 
+                  label={`Client: ${apiStatus.clientType}`} 
+                  variant="outlined"
+                  size="small"
+                />
+              </Stack>
+              
+              {apiStatus.mode === 'development' && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  現在モックデータを使用しています。実際のTikTok APIを使用するには、下記のClient Keyを設定してください。
+                </Alert>
+              )}
+              
+              {apiStatus.mode === 'production' && !apiStatus.hasAccessToken && (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  本番APIモードですが、アクセストークンが設定されていません。TikTok連携タブでOAuth認証を完了してください。
+                </Alert>
+              )}
+            </Box>
+
+            <Stack spacing={3}>
+              <Box>
+                <Typography variant="subtitle2" gutterBottom sx={{ mb: 1 }}>
+                  TikTok for Developers 設定
+                </Typography>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  <strong>開発者向け情報:</strong> TikTok for Developersで取得したClient Keyを入力してください。
+                  設定することで本番APIに自動切り替わります。未設定の場合はモックデータを使用します。
+                </Alert>
+                
+                <TextField
+                  fullWidth
+                  label="Client Key"
+                  value={formData.tiktokClientKey}
+                  onChange={handleChange('tiktokClientKey')}
+                  error={!!errors.tiktokClientKey}
+                  helperText={errors.tiktokClientKey || 'TikTok for Developersで取得したClient Keyを入力'}
+                  placeholder="aw***********************"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <ApiIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
+
+              <Divider />
+
+              <Box>
+                <Typography variant="subtitle2" gutterBottom sx={{ mb: 1 }}>
+                  アクセストークン（OAuth認証後に自動設定）
+                </Typography>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  このトークンはTikTok連携タブでOAuth認証を完了すると自動的に設定されます。
+                  手動での編集は推奨されません。
+                </Alert>
+                
+                <TextField
+                  fullWidth
+                  label="Access Token"
+                  type={showAccessToken ? 'text' : 'password'}
+                  value={formData.tiktokAccessToken}
+                  onChange={handleChange('tiktokAccessToken')}
+                  error={!!errors.tiktokAccessToken}
+                  helperText="OAuth認証完了後に自動設定されます"
+                  placeholder="••••••••••••••••••••••••••••••••"
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle access token visibility"
+                          onClick={handleClickShowAccessToken}
+                          onMouseDown={handleMouseDownPassword}
+                          edge="end"
+                        >
+                          {showAccessToken ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
+
+              <Divider />
+
+              <Box>
+                <Typography variant="subtitle2" gutterBottom sx={{ mb: 1 }}>
+                  レガシー設定（後方互換性）
+                </Typography>
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  これらの設定は古いシステム用です。新しいAPI設定が優先されます。
+                </Alert>
+                <Stack spacing={2}>
+                  <TextField
+                    fullWidth
+                    label="TikTok ID"
+                    value={formData.tiktokId}
+                    onChange={handleChange('tiktokId')}
+                    error={!!errors.tiktokId}
+                    helperText="レガシー用TikTokアカウントID"
+                    placeholder="@username"
+                  />
+                  <TextField
+                    fullWidth
+                    label="APIパスワード"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={handleChange('password')}
+                    error={!!errors.password}
+                    helperText="レガシー用APIパスワード"
+                    placeholder="••••••••"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={handleClickShowPassword}
+                            onMouseDown={handleMouseDownPassword}
+                            edge="end"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Stack>
+              </Box>
+
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<SaveIcon />}
+                  onClick={handleSave}
+                  sx={{
+                    backgroundColor: '#FE2C55',
+                    '&:hover': {
+                      backgroundColor: '#E01E45',
+                    },
+                  }}
+                >
+                  API設定を保存
+                </Button>
+              </Box>
+
+              {saved && (
+                <Alert severity="success" sx={{ mt: 2 }}>
+                  API設定が正常に保存されました。システムが自動的に再初期化されました。
+                </Alert>
+              )}
+            </Stack>
+          </Paper>
+        )}
+
+        {tabValue === 2 && (
           <Paper sx={{ p: 4 }}>
             <TikTokConnect />
           </Paper>

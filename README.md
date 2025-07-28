@@ -8,6 +8,8 @@ TikTokの動画分析データを可視化・管理するWebアプリケーシ�
 - **データ可視化**: 再生数、いいね数、コメント数等のグラフ表示
 - **日付範囲フィルター**: 7日、14日、21日、カスタム期間での分析
 - **ユーザー認証**: Supabaseによるセキュアな認証システム
+- **🔄 TikTok API自動切り替え**: 環境変数による開発/本番モードの自動判定
+- **📊 モックデータ**: 開発時に実際のAPIキーなしで動作
 - **TikTok OAuth**: TikTokアカウント連携（オプション）
 - **競合分析**: 競合他社の分析機能（Coming Soon）
 - **AI レポート**: AIによる分析レポート生成
@@ -42,10 +44,18 @@ npm install
 `.env.local` ファイルを作成し、以下を設定：
 
 ```env
+# Supabase設定（必須）
 VITE_SUPABASE_URL=your-supabase-url
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-VITE_TIKTOK_CLIENT_KEY=your-tiktok-client-key  # オプション
+
+# TikTok API設定（オプション - 本番API使用時のみ）
+VITE_TIKTOK_CLIENT_KEY=your-tiktok-client-key
 ```
+
+**🔄 TikTok API自動切り替えについて:**
+- `VITE_TIKTOK_CLIENT_KEY`が未設定 → **モックデータ**を使用
+- `VITE_TIKTOK_CLIENT_KEY`を設定 → **本番TikTok API**に自動切り替え
+- コード変更は一切不要！
 
 ### 4. データベースセットアップ
 
@@ -66,11 +76,24 @@ npm run dev
 3. 環境変数を設定
 4. デプロイ実行
 
-### TikTok OAuth 設定（オプション）
+### TikTok API本番設定（オプション）
 
+#### 🔧 開発フェーズ
+1. **そのまま開発開始！** - モックデータで全機能が動作します
+2. 実際のUIとワークフローを確認
+3. 開発完了後に本番APIに切り替え
+
+#### 🚀 本番切り替え手順
 1. [TikTok for Developers](https://developers.tiktok.com/) でアプリ作成
-2. Supabase Edge Functions をデプロイ
-3. 環境変数に Client Key を設定
+2. Client Key を取得
+3. 環境変数 `VITE_TIKTOK_CLIENT_KEY` に設定
+4. **自動的に本番APIに切り替わります！**
+
+#### 🌐 Vercel デプロイ時
+```bash
+# Vercelの環境変数設定
+vercel env add VITE_TIKTOK_CLIENT_KEY production
+```
 
 ## 📁 プロジェクト構造
 
@@ -78,10 +101,15 @@ npm run dev
 src/
 ├── components/          # 再利用可能なコンポーネント
 ├── contexts/           # React Context (認証等)
-├── hooks/              # カスタムフック
+├── hooks/              # カスタムフック (useTikTokData等)
 ├── lib/                # ライブラリ設定
+│   └── tiktok/         # 🔄 TikTok API自動切り替えシステム
+│       ├── index.ts    # - メインクライアント（自動切り替え）
+│       ├── mock-client.ts    # - モックデータクライアント
+│       └── api-client.ts     # - 本番APIクライアント
 ├── pages/              # ページコンポーネント
 ├── types/              # TypeScript型定義
+│   └── tiktok-api.ts   # - TikTok API統一インターフェース
 └── data/               # モックデータ
 
 supabase/
@@ -98,10 +126,47 @@ supabase/
 
 ## 📊 使用方法
 
-1. **アカウント作成**: メールアドレスでアカウント登録
-2. **ダッシュボード**: 動画データの概要を確認
-3. **日付フィルター**: 期間を指定して分析
-4. **設定**: TikTokアカウント連携（オプション）
+### 🚀 すぐに始める（モックデータ）
+1. **デモログイン**: `demo@example.com` / `password123`
+2. **ダッシュボード**: 自動生成されたモックデータで動作確認
+3. **日付フィルター**: 7日/14日/21日/カスタムで期間分析
+4. **設定 > API設定**: 現在のモード（モックデータ/本番API）を確認
+
+### 🔄 本番APIに切り替え
+1. **設定 > API設定** タブを開く
+2. **Client Key** を入力
+3. **保存** → 自動的に本番APIに切り替わります
+4. **TikTok連携** タブでOAuth認証を完了
+
+### 📊 データ分析
+- **サマリーカード**: 総再生数、いいね数、エンゲージメント率
+- **グラフ表示**: 各メトリクスの時系列推移
+- **動画テーブル**: 個別動画の詳細パフォーマンス
+
+## 🆕 新機能: TikTok API自動切り替えシステム
+
+### ✨ 特徴
+- **🔄 環境変数による自動判定**: APIキーの有無で開発/本番モードを自動切り替え
+- **📊 リアルなモックデータ**: 実際のTikTok APIと同じインターフェースで開発可能
+- **🚀 ワンクリック切り替え**: 設定ページでAPIキーを入力するだけで本番APIに移行
+- **🛡️ 型安全性**: TypeScriptで統一されたAPIインターフェース
+
+### 🔧 技術詳細
+```typescript
+// 自動切り替えの仕組み
+export class TikTokClient {
+  constructor() {
+    this.mode = this.detectMode(); // APIキーの有無を自動検出
+    this.client = this.mode === 'production' 
+      ? new TikTokAPIClient() 
+      : new TikTokMockClient();
+  }
+}
+
+// 使用者は同じメソッドを使用
+const client = new TikTokClient();
+const data = await client.getVideoAnalytics(params); // モード関係なく同じ
+```
 
 ## 🔧 開発コマンド
 
