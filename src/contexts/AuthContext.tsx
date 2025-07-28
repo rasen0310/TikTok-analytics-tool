@@ -14,6 +14,7 @@ interface AuthContextType {
   logout: () => void;
   loading: boolean;
   signUp: (email: string, password: string, name: string) => Promise<void>;
+  loginWithDemo: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -114,7 +115,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       options: {
         data: {
           name: name
-        }
+        },
+        // デモアカウントの場合は、メール確認をスキップするよう設定
+        emailRedirectTo: undefined
       }
     });
 
@@ -142,12 +145,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('tiktokAnalyticsSettings');
   };
 
+  // デモアカウント用のログイン関数
+  const loginWithDemo = async () => {
+    const DEMO_EMAIL = 'demo@example.com';
+    const DEMO_PASSWORD = 'password123';
+    const DEMO_NAME = 'デモユーザー';
+
+    try {
+      // まずログインを試行
+      await login(DEMO_EMAIL, DEMO_PASSWORD);
+    } catch (loginError) {
+      // ログインに失敗した場合、アカウント作成を試行
+      try {
+        await signUp(DEMO_EMAIL, DEMO_PASSWORD, DEMO_NAME);
+        
+        // アカウント作成後、少し待ってからログインを再試行
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        try {
+          await login(DEMO_EMAIL, DEMO_PASSWORD);
+        } catch (secondError) {
+          // まだログインできない場合は、メール確認が必要な可能性がある
+          throw new Error('デモアカウントが作成されました。ログインには時間がかかる場合があります。');
+        }
+      } catch (signUpError: any) {
+        // アカウントが既に存在するエラーの場合、再度ログインを試行
+        if (signUpError.message?.includes('already') || signUpError.message?.includes('存在')) {
+          await login(DEMO_EMAIL, DEMO_PASSWORD);
+        } else {
+          throw signUpError;
+        }
+      }
+    }
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
     login,
     logout,
     signUp,
+    loginWithDemo,
     loading,
   };
 

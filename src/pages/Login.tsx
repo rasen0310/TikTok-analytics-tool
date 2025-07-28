@@ -21,9 +21,10 @@ import { useAuth } from '../contexts/AuthContext';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginWithDemo } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [formData, setFormData] = useState({
     email: '',
@@ -52,6 +53,21 @@ export const Login: React.FC = () => {
       setError(err instanceof Error ? err.message : 'ログインに失敗しました');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // デモアカウントでログイン
+  const handleDemoLogin = async () => {
+    setDemoLoading(true);
+    setError('');
+
+    try {
+      await loginWithDemo();
+      navigate('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'デモログインに失敗しました');
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -168,14 +184,36 @@ export const Login: React.FC = () => {
                   backgroundColor: '#E01E45',
                 },
               }}
-              disabled={loading}
+              disabled={loading || demoLoading}
             >
               {loading ? 'ログイン中...' : 'ログイン'}
+            </Button>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={handleDemoLogin}
+              disabled={loading || demoLoading}
+              sx={{
+                mb: 2,
+                py: 1.5,
+                borderColor: '#FE2C55',
+                color: '#FE2C55',
+                '&:hover': {
+                  borderColor: '#E01E45',
+                  backgroundColor: 'rgba(254, 44, 85, 0.04)',
+                },
+              }}
+            >
+              {demoLoading ? 'デモアカウント準備中...' : 'デモアカウントでログイン'}
             </Button>
 
             <Box sx={{ textAlign: 'center', mt: 2 }}>
               <Typography variant="body2" color="textSecondary">
                 デモアカウント: demo@example.com / password123
+              </Typography>
+              <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+                ※ デモアカウントが存在しない場合は自動で作成されます
               </Typography>
             </Box>
           </Box>
