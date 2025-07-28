@@ -20,10 +20,8 @@ import {
   Assessment as AssessmentIcon,
   Menu as MenuIcon,
   Settings as SettingsIcon,
-  Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 
 const drawerWidth = 240;
 
@@ -45,7 +43,6 @@ export const Layout: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, user } = useAuth();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -141,31 +138,7 @@ export const Layout: React.FC = () => {
               />
             </ListItemButton>
           </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton
-              onClick={() => {
-                logout();
-                navigate('/login');
-              }}
-              sx={{
-                '&:hover': {
-                  backgroundColor: 'rgba(254, 44, 85, 0.08)',
-                },
-              }}
-            >
-              <ListItemIcon>
-                <LogoutIcon />
-              </ListItemIcon>
-              <ListItemText primary="ログアウト" />
-            </ListItemButton>
-          </ListItem>
         </List>
-        
-        <Box sx={{ p: 2, borderTop: '1px solid rgba(0, 0, 0, 0.12)' }}>
-          <Typography variant="caption" color="textSecondary">
-            ログイン中: {user?.email}
-          </Typography>
-        </Box>
       </Box>
     </Box>
   );

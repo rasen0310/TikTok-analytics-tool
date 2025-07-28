@@ -21,29 +21,23 @@ import {
   Save as SaveIcon,
   Api as ApiIcon,
 } from '@mui/icons-material';
-import { TikTokConnect } from '../components/TikTokConnect';
 import { tiktokClient } from '../lib/tiktok';
 
 interface SettingsData {
   name: string;
   email: string;
-  tiktokId: string;
-  password: string;
   tiktokClientKey: string;
   tiktokAccessToken: string;
 }
 
 export const Settings: React.FC = () => {
   const [tabValue, setTabValue] = React.useState(0);
-  const [showPassword, setShowPassword] = React.useState(false);
   const [showAccessToken, setShowAccessToken] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [apiStatus, setApiStatus] = React.useState(tiktokClient.getStatus());
   const [formData, setFormData] = React.useState<SettingsData>({
     name: '',
     email: '',
-    tiktokId: '',
-    password: '',
     tiktokClientKey: '',
     tiktokAccessToken: '',
   });
@@ -58,8 +52,6 @@ export const Settings: React.FC = () => {
       setFormData({
         name: parsedSettings.name || '',
         email: parsedSettings.email || '',
-        tiktokId: parsedSettings.tiktokId || '',
-        password: parsedSettings.password || '',
         tiktokClientKey: parsedSettings.tiktokClientKey || '',
         tiktokAccessToken: parsedSettings.tiktokAccessToken || '',
       });
@@ -99,14 +91,6 @@ export const Settings: React.FC = () => {
       newErrors.email = '有効なメールアドレスを入力してください';
     }
 
-    if (!formData.tiktokId.trim()) {
-      newErrors.tiktokId = 'TikTok IDを入力してください';
-    }
-
-    if (!formData.password.trim()) {
-      newErrors.password = 'パスワードを入力してください';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -126,17 +110,11 @@ export const Settings: React.FC = () => {
     }
   };
 
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
 
   const handleClickShowAccessToken = () => {
     setShowAccessToken(!showAccessToken);
   };
 
-  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-  };
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -164,7 +142,6 @@ export const Settings: React.FC = () => {
           >
             <Tab label="アカウント情報" />
             <Tab label="API設定" />
-            <Tab label="TikTok連携" />
           </Tabs>
         </Paper>
 
@@ -327,7 +304,7 @@ export const Settings: React.FC = () => {
                         <IconButton
                           aria-label="toggle access token visibility"
                           onClick={handleClickShowAccessToken}
-                          onMouseDown={handleMouseDownPassword}
+                          onMouseDown={(e) => e.preventDefault()}
                           edge="end"
                         >
                           {showAccessToken ? <VisibilityOff /> : <Visibility />}
@@ -338,52 +315,7 @@ export const Settings: React.FC = () => {
                 />
               </Box>
 
-              <Divider />
-
-              <Box>
-                <Typography variant="subtitle2" gutterBottom sx={{ mb: 1 }}>
-                  レガシー設定（後方互換性）
-                </Typography>
-                <Alert severity="warning" sx={{ mb: 2 }}>
-                  これらの設定は古いシステム用です。新しいAPI設定が優先されます。
-                </Alert>
-                <Stack spacing={2}>
-                  <TextField
-                    fullWidth
-                    label="TikTok ID"
-                    value={formData.tiktokId}
-                    onChange={handleChange('tiktokId')}
-                    error={!!errors.tiktokId}
-                    helperText="レガシー用TikTokアカウントID"
-                    placeholder="@username"
-                  />
-                  <TextField
-                    fullWidth
-                    label="APIパスワード"
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={handleChange('password')}
-                    error={!!errors.password}
-                    helperText="レガシー用APIパスワード"
-                    placeholder="••••••••"
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            aria-label="toggle password visibility"
-                            onClick={handleClickShowPassword}
-                            onMouseDown={handleMouseDownPassword}
-                            edge="end"
-                          >
-                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Stack>
-              </Box>
-
+  
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
                 <Button
                   variant="contained"
@@ -410,11 +342,6 @@ export const Settings: React.FC = () => {
           </Paper>
         )}
 
-        {tabValue === 2 && (
-          <Paper sx={{ p: 4 }}>
-            <TikTokConnect />
-          </Paper>
-        )}
 
         {tabValue === 0 && (
           <Paper sx={{ p: 4, mt: 3, backgroundColor: '#f5f5f5' }}>
