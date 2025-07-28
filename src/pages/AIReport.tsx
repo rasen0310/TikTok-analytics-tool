@@ -20,7 +20,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import { mockVideos, calculateSummary } from '../data/mockData';
-import { Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import {
   Remove as NoChangeIcon,
   ArrowUpward,
@@ -270,11 +270,15 @@ export const AIReport: React.FC = () => {
     );
   };
 
+  const formatPeriodLabel = (period: PeriodData) => {
+    return `${dayjs(period.startDate).format('YYYY/MM/DD')} - ${dayjs(period.endDate).format('YYYY/MM/DD')}`;
+  };
+
   const chartData = period1 && period2 ? {
     labels: ['再生回数', 'いいね数', 'コメント数', 'シェア数', '新規フォロワー'],
     datasets: [
       {
-        label: '期間1',
+        label: formatPeriodLabel(period1),
         data: [
           period1.summary.totalViews,
           period1.summary.totalLikes,
@@ -282,10 +286,12 @@ export const AIReport: React.FC = () => {
           period1.summary.totalShares,
           period1.summary.totalNewFollowers,
         ],
-        backgroundColor: 'rgba(254, 44, 85, 0.6)',
+        backgroundColor: 'rgba(254, 44, 85, 0.8)',
+        borderColor: 'rgba(254, 44, 85, 1)',
+        borderWidth: 1,
       },
       {
-        label: '期間2',
+        label: formatPeriodLabel(period2),
         data: [
           period2.summary.totalViews,
           period2.summary.totalLikes,
@@ -293,7 +299,9 @@ export const AIReport: React.FC = () => {
           period2.summary.totalShares,
           period2.summary.totalNewFollowers,
         ],
-        backgroundColor: 'rgba(37, 244, 238, 0.6)',
+        backgroundColor: 'rgba(37, 244, 238, 0.8)',
+        borderColor: 'rgba(37, 244, 238, 1)',
+        borderWidth: 1,
       },
     ],
   } : null;
@@ -458,8 +466,8 @@ export const AIReport: React.FC = () => {
                 </Box>
                 <Paper sx={{ p: 2, bgcolor: 'white' }}>
                   <Box sx={{ height: 400 }}>
-                    {chartData && (
-                      <Line
+                    {chartData && period1 && period2 && (
+                      <Bar
                         data={chartData}
                         options={{
                           responsive: true,
@@ -478,7 +486,7 @@ export const AIReport: React.FC = () => {
                             },
                             title: {
                               display: true,
-                              text: '📈 主要指標の期間比較分析',
+                              text: `📊 期間比較分析: ${formatPeriodLabel(period1)} vs ${formatPeriodLabel(period2)}`,
                               font: {
                                 size: 16,
                                 weight: 'bold',
@@ -496,11 +504,14 @@ export const AIReport: React.FC = () => {
                                 font: {
                                   size: 12,
                                 },
+                                callback: function(value) {
+                                  return new Intl.NumberFormat('ja-JP').format(value as number);
+                                },
                               },
                             },
                             x: {
                               grid: {
-                                color: 'rgba(0,0,0,0.1)',
+                                display: false,
                               },
                               ticks: {
                                 font: {
@@ -510,14 +521,34 @@ export const AIReport: React.FC = () => {
                               },
                             },
                           },
-                          elements: {
-                            line: {
-                              tension: 0.4,
-                              borderWidth: 3,
-                            },
-                            point: {
-                              radius: 6,
-                              hoverRadius: 8,
+                          interaction: {
+                            intersect: false,
+                            mode: 'index',
+                          },
+                          hover: {
+                            mode: 'index',
+                            intersect: false,
+                          },
+                          animation: {
+                            duration: 1000,
+                            easing: 'easeOutQuart',
+                            onComplete: function(context) {
+                              const chart = context.chart;
+                              const ctx = chart.ctx;
+                              
+                              ctx.font = 'bold 11px Arial';
+                              ctx.fillStyle = '#333';
+                              ctx.textAlign = 'center';
+                              ctx.textBaseline = 'bottom';
+
+                              chart.data.datasets.forEach((dataset, datasetIndex) => {
+                                const meta = chart.getDatasetMeta(datasetIndex);
+                                meta.data.forEach((bar, index) => {
+                                  const value = dataset.data[index] as number;
+                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value);
+                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                });
+                              });
                             },
                           },
                         }}
