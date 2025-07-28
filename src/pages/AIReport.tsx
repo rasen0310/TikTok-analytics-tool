@@ -270,15 +270,37 @@ export const AIReport: React.FC = () => {
     );
   };
 
-  const formatPeriodLabel = (period: PeriodData) => {
+  const formatPeriodLabel = (isFirstPeriod: boolean) => {
+    if (selectedPreset === 'weekly') {
+      return isFirstPeriod ? '先週' : '今週';
+    } else if (selectedPreset === 'monthly') {
+      return isFirstPeriod ? '先月' : '今月';
+    } else {
+      return isFirstPeriod ? '期間1' : '期間2';
+    }
+  };
+
+  const formatDateRange = (period: PeriodData) => {
     return `${dayjs(period.startDate).format('YYYY/MM/DD')} - ${dayjs(period.endDate).format('YYYY/MM/DD')}`;
+  };
+
+  const getComparisonTitle = () => {
+    if (!period1 || !period2) return '';
+    
+    if (selectedPreset === 'weekly') {
+      return '週次比較レポート: 先週 vs 今週';
+    } else if (selectedPreset === 'monthly') {
+      return '月次比較レポート: 先月 vs 今月';
+    } else {
+      return `カスタム比較レポート: ${formatDateRange(period1)} vs ${formatDateRange(period2)}`;
+    }
   };
 
   const chartData = period1 && period2 ? {
     labels: ['再生回数', 'いいね数', 'コメント数', 'シェア数', '新規フォロワー'],
     datasets: [
       {
-        label: formatPeriodLabel(period1),
+        label: formatPeriodLabel(true),
         data: [
           period1.summary.totalViews,
           period1.summary.totalLikes,
@@ -291,7 +313,7 @@ export const AIReport: React.FC = () => {
         borderWidth: 1,
       },
       {
-        label: formatPeriodLabel(period2),
+        label: formatPeriodLabel(false),
         data: [
           period2.summary.totalViews,
           period2.summary.totalLikes,
@@ -310,9 +332,44 @@ export const AIReport: React.FC = () => {
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Container maxWidth="xl">
         <Box sx={{ py: 4 }}>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', mb: 4 }}>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
             AIレポート - 期間比較分析
           </Typography>
+          
+          {period1 && period2 && (
+            <Paper sx={{ 
+              p: 3, 
+              mb: 4, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              textAlign: 'center'
+            }}>
+              <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
+                📊 {getComparisonTitle()}
+              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 4, flexWrap: 'wrap' }}>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
+                    {formatPeriodLabel(true)}
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {formatDateRange(period1)}
+                  </Typography>
+                </Box>
+                <Typography variant="h6" sx={{ alignSelf: 'center', mx: 2 }}>
+                  VS
+                </Typography>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
+                    {formatPeriodLabel(false)}
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {formatDateRange(period2)}
+                  </Typography>
+                </Box>
+              </Box>
+            </Paper>
+          )}
 
           <Paper sx={{ p: 3, mb: 4 }}>
             <Typography variant="h6" gutterBottom>期間選択</Typography>
@@ -486,7 +543,7 @@ export const AIReport: React.FC = () => {
                             },
                             title: {
                               display: true,
-                              text: `📊 期間比較分析: ${formatPeriodLabel(period1)} vs ${formatPeriodLabel(period2)}`,
+                              text: `📊 ${formatPeriodLabel(true)} vs ${formatPeriodLabel(false)} の比較`,
                               font: {
                                 size: 16,
                                 weight: 'bold',
