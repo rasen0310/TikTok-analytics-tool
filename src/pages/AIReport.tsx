@@ -11,6 +11,8 @@ import {
   Alert,
   Divider,
   Avatar,
+  Button,
+  ButtonGroup,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -29,6 +31,8 @@ import {
   Share,
   PersonAdd,
   AccessTime,
+  CalendarToday,
+  DateRange,
 } from '@mui/icons-material';
 
 interface PeriodData {
@@ -44,6 +48,7 @@ export const AIReport: React.FC = () => {
   const [period1End, setPeriod1End] = React.useState<Dayjs | null>(dayjs().subtract(7, 'day'));
   const [period2Start, setPeriod2Start] = React.useState<Dayjs | null>(dayjs().subtract(7, 'day'));
   const [period2End, setPeriod2End] = React.useState<Dayjs | null>(dayjs());
+  const [selectedPreset, setSelectedPreset] = React.useState<string>('custom');
 
   const getPeriodData = (startDate: Dayjs | null, endDate: Dayjs | null): PeriodData | null => {
     if (!startDate || !endDate) return null;
@@ -70,6 +75,59 @@ export const AIReport: React.FC = () => {
   const calculateChange = (oldValue: number, newValue: number) => {
     if (oldValue === 0) return 0;
     return ((newValue - oldValue) / oldValue) * 100;
+  };
+
+  const getChangeDescription = (change: number) => {
+    const absChange = Math.abs(change);
+    
+    if (absChange < 0.1) {
+      return 'ほぼ変化なし';
+    }
+    
+    const isPositive = change > 0;
+    
+    // 増減幅に応じた表現のプリセット
+    if (isPositive) {
+      if (absChange >= 50) return '大幅に伸びています';
+      if (absChange >= 25) return '著しく向上しています';
+      if (absChange >= 15) return '順調に成長しています';
+      if (absChange >= 10) return '向上しています';
+      if (absChange >= 5) return '緩やかに上昇しています';
+      return '微増です';
+    } else {
+      if (absChange >= 50) return '大幅に減少しています';
+      if (absChange >= 25) return '著しく低下しています';
+      if (absChange >= 15) return '減少傾向にあります';
+      if (absChange >= 10) return '低下しています';
+      if (absChange >= 5) return '緩やかに減少しています';
+      return '微減です';
+    }
+  };
+
+  const handlePresetClick = (preset: string) => {
+    setSelectedPreset(preset);
+    const now = dayjs();
+    
+    switch (preset) {
+      case 'weekly':
+        // 直近1週間 vs その前の1週間
+        setPeriod1Start(now.subtract(14, 'day'));
+        setPeriod1End(now.subtract(7, 'day'));
+        setPeriod2Start(now.subtract(7, 'day'));
+        setPeriod2End(now);
+        break;
+      case 'monthly':
+        // 直近1ヶ月 vs その前の1ヶ月
+        setPeriod1Start(now.subtract(2, 'month'));
+        setPeriod1End(now.subtract(1, 'month'));
+        setPeriod2Start(now.subtract(1, 'month'));
+        setPeriod2End(now);
+        break;
+      case 'custom':
+      default:
+        // カスタム設定はそのまま
+        break;
+    }
   };
 
   const getMetricIcon = (metric: string) => {
@@ -203,7 +261,7 @@ export const AIReport: React.FC = () => {
                   mt: 1
                 }}
               >
-                {isPositive ? '向上しています' : '減少しています'}
+                {getChangeDescription(change)}
               </Typography>
             )}
           </Stack>
@@ -250,42 +308,113 @@ export const AIReport: React.FC = () => {
 
           <Paper sx={{ p: 3, mb: 4 }}>
             <Typography variant="h6" gutterBottom>期間選択</Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              <Box sx={{ flex: '1 1 auto', minWidth: '300px' }}>
-                <Typography variant="subtitle1" gutterBottom>期間1</Typography>
-                <Stack direction="row" spacing={2}>
-                  <DatePicker
-                    label="開始日"
-                    value={period1Start}
-                    onChange={(newValue) => setPeriod1Start(newValue)}
-                    slotProps={{ textField: { fullWidth: true } }}
-                  />
-                  <DatePicker
-                    label="終了日"
-                    value={period1End}
-                    onChange={(newValue) => setPeriod1End(newValue)}
-                    slotProps={{ textField: { fullWidth: true } }}
-                  />
-                </Stack>
-              </Box>
-              <Box sx={{ flex: '1 1 auto', minWidth: '300px' }}>
-                <Typography variant="subtitle1" gutterBottom>期間2</Typography>
-                <Stack direction="row" spacing={2}>
-                  <DatePicker
-                    label="開始日"
-                    value={period2Start}
-                    onChange={(newValue) => setPeriod2Start(newValue)}
-                    slotProps={{ textField: { fullWidth: true } }}
-                  />
-                  <DatePicker
-                    label="終了日"
-                    value={period2End}
-                    onChange={(newValue) => setPeriod2End(newValue)}
-                    slotProps={{ textField: { fullWidth: true } }}
-                  />
-                </Stack>
-              </Box>
+            
+            {/* プリセットボタン */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" gutterBottom sx={{ mb: 2 }}>
+                クイック選択
+              </Typography>
+              <ButtonGroup variant="outlined" sx={{ mb: 2 }}>
+                <Button
+                  onClick={() => handlePresetClick('weekly')}
+                  variant={selectedPreset === 'weekly' ? 'contained' : 'outlined'}
+                  startIcon={<CalendarToday />}
+                  sx={{
+                    backgroundColor: selectedPreset === 'weekly' ? '#FE2C55' : 'transparent',
+                    color: selectedPreset === 'weekly' ? 'white' : '#FE2C55',
+                    borderColor: '#FE2C55',
+                    '&:hover': {
+                      backgroundColor: selectedPreset === 'weekly' ? '#E01E45' : 'rgba(254, 44, 85, 0.04)',
+                      borderColor: '#FE2C55',
+                    },
+                  }}
+                >
+                  週次レポート
+                </Button>
+                <Button
+                  onClick={() => handlePresetClick('monthly')}
+                  variant={selectedPreset === 'monthly' ? 'contained' : 'outlined'}
+                  startIcon={<DateRange />}
+                  sx={{
+                    backgroundColor: selectedPreset === 'monthly' ? '#FE2C55' : 'transparent',
+                    color: selectedPreset === 'monthly' ? 'white' : '#FE2C55',
+                    borderColor: '#FE2C55',
+                    '&:hover': {
+                      backgroundColor: selectedPreset === 'monthly' ? '#E01E45' : 'rgba(254, 44, 85, 0.04)',
+                      borderColor: '#FE2C55',
+                    },
+                  }}
+                >
+                  月次レポート
+                </Button>
+                <Button
+                  onClick={() => handlePresetClick('custom')}
+                  variant={selectedPreset === 'custom' ? 'contained' : 'outlined'}
+                  sx={{
+                    backgroundColor: selectedPreset === 'custom' ? '#FE2C55' : 'transparent',
+                    color: selectedPreset === 'custom' ? 'white' : '#FE2C55',
+                    borderColor: '#FE2C55',
+                    '&:hover': {
+                      backgroundColor: selectedPreset === 'custom' ? '#E01E45' : 'rgba(254, 44, 85, 0.04)',
+                      borderColor: '#FE2C55',
+                    },
+                  }}
+                >
+                  カスタム
+                </Button>
+              </ButtonGroup>
+              
+              {selectedPreset === 'weekly' && (
+                <Alert severity="info" sx={{ mt: 1 }}>
+                  📅 直近1週間と前週を比較します
+                </Alert>
+              )}
+              {selectedPreset === 'monthly' && (
+                <Alert severity="info" sx={{ mt: 1 }}>
+                  📅 直近1ヶ月と前月を比較します
+                </Alert>
+              )}
             </Box>
+
+            {/* カスタム期間選択 */}
+            {selectedPreset === 'custom' && (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                <Box sx={{ flex: '1 1 auto', minWidth: '300px' }}>
+                  <Typography variant="subtitle1" gutterBottom>期間1</Typography>
+                  <Stack direction="row" spacing={2}>
+                    <DatePicker
+                      label="開始日"
+                      value={period1Start}
+                      onChange={(newValue) => setPeriod1Start(newValue)}
+                      slotProps={{ textField: { fullWidth: true } }}
+                    />
+                    <DatePicker
+                      label="終了日"
+                      value={period1End}
+                      onChange={(newValue) => setPeriod1End(newValue)}
+                      slotProps={{ textField: { fullWidth: true } }}
+                    />
+                  </Stack>
+                </Box>
+                <Box sx={{ flex: '1 1 auto', minWidth: '300px' }}>
+                  <Typography variant="subtitle1" gutterBottom>期間2</Typography>
+                  <Stack direction="row" spacing={2}>
+                    <DatePicker
+                      label="開始日"
+                      value={period2Start}
+                      onChange={(newValue) => setPeriod2Start(newValue)}
+                      slotProps={{ textField: { fullWidth: true } }}
+                    />
+                    <DatePicker
+                      label="終了日"
+                      value={period2End}
+                      onChange={(newValue) => setPeriod2End(newValue)}
+                      slotProps={{ textField: { fullWidth: true } }}
+                    />
+                  </Stack>
+                </Box>
+              </Box>
+            )}
           </Paper>
 
           {period1 && period2 ? (
