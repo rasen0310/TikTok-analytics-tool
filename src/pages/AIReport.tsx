@@ -319,40 +319,6 @@ export const AIReport: React.FC = () => {
             AIレポート - 期間比較分析
           </Typography>
           
-          {period1 && period2 && showReport && (
-            <Paper sx={{ 
-              p: 3, 
-              mb: 4, 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              textAlign: 'center'
-            }}>
-              <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-                📊 {getComparisonTitle()}
-              </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 4, flexWrap: 'wrap' }}>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
-                    {formatPeriodLabel(true)}
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {formatDateRange(period1)}
-                  </Typography>
-                </Box>
-                <Typography variant="h6" sx={{ alignSelf: 'center', mx: 2 }}>
-                  VS
-                </Typography>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
-                    {formatPeriodLabel(false)}
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {formatDateRange(period2)}
-                  </Typography>
-                </Box>
-              </Box>
-            </Paper>
-          )}
 
           <Paper sx={{ p: 3, mb: 4 }}>
             <Typography variant="h6" gutterBottom>期間選択</Typography>
@@ -426,8 +392,8 @@ export const AIReport: React.FC = () => {
 
             {/* カスタム期間選択 */}
             {selectedPreset === 'custom' && (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                <Box sx={{ flex: '1 1 auto', minWidth: '300px' }}>
+              <Stack spacing={3}>
+                <Box>
                   <Typography variant="subtitle1" gutterBottom>期間1</Typography>
                   <Stack direction="row" spacing={2}>
                     <DatePicker
@@ -444,7 +410,7 @@ export const AIReport: React.FC = () => {
                     />
                   </Stack>
                 </Box>
-                <Box sx={{ flex: '1 1 auto', minWidth: '300px' }}>
+                <Box>
                   <Typography variant="subtitle1" gutterBottom>期間2</Typography>
                   <Stack direction="row" spacing={2}>
                     <DatePicker
@@ -461,7 +427,7 @@ export const AIReport: React.FC = () => {
                     />
                   </Stack>
                 </Box>
-              </Box>
+              </Stack>
             )}
             
             {/* レポート出力ボタン */}
@@ -597,14 +563,16 @@ export const AIReport: React.FC = () => {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
                                 ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = '#333';
+                                ctx.fillStyle = 'white';
                                 ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
+                                ctx.textBaseline = 'middle';
                                 chart.data.datasets[0].data.forEach((value, index) => {
                                   const meta = chart.getDatasetMeta(0);
                                   const bar = meta.data[index];
                                   const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                  const barHeight = bar.y - bar.base;
+                                  const yPos = bar.y + (barHeight / 2);
+                                  ctx.fillText(formattedValue, bar.x, yPos);
                                 });
                               }
                             }
@@ -643,14 +611,16 @@ export const AIReport: React.FC = () => {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
                                 ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = '#333';
+                                ctx.fillStyle = 'white';
                                 ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
+                                ctx.textBaseline = 'middle';
                                 chart.data.datasets[0].data.forEach((value, index) => {
                                   const meta = chart.getDatasetMeta(0);
                                   const bar = meta.data[index];
                                   const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                  const barHeight = bar.y - bar.base;
+                                  const yPos = bar.y + (barHeight / 2);
+                                  ctx.fillText(formattedValue, bar.x, yPos);
                                 });
                               }
                             }
@@ -689,14 +659,16 @@ export const AIReport: React.FC = () => {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
                                 ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = '#333';
+                                ctx.fillStyle = 'white';
                                 ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
+                                ctx.textBaseline = 'middle';
                                 chart.data.datasets[0].data.forEach((value, index) => {
                                   const meta = chart.getDatasetMeta(0);
                                   const bar = meta.data[index];
                                   const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                  const barHeight = bar.y - bar.base;
+                                  const yPos = bar.y + (barHeight / 2);
+                                  ctx.fillText(formattedValue, bar.x, yPos);
                                 });
                               }
                             }
@@ -735,14 +707,16 @@ export const AIReport: React.FC = () => {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
                                 ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = '#333';
+                                ctx.fillStyle = 'white';
                                 ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
+                                ctx.textBaseline = 'middle';
                                 chart.data.datasets[0].data.forEach((value, index) => {
                                   const meta = chart.getDatasetMeta(0);
                                   const bar = meta.data[index];
                                   const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                  const barHeight = bar.y - bar.base;
+                                  const yPos = bar.y + (barHeight / 2);
+                                  ctx.fillText(formattedValue, bar.x, yPos);
                                 });
                               }
                             }
@@ -781,14 +755,16 @@ export const AIReport: React.FC = () => {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
                                 ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = '#333';
+                                ctx.fillStyle = 'white';
                                 ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
+                                ctx.textBaseline = 'middle';
                                 chart.data.datasets[0].data.forEach((value, index) => {
                                   const meta = chart.getDatasetMeta(0);
                                   const bar = meta.data[index];
                                   const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                  const barHeight = bar.y - bar.base;
+                                  const yPos = bar.y + (barHeight / 2);
+                                  ctx.fillText(formattedValue, bar.x, yPos);
                                 });
                               }
                             }
