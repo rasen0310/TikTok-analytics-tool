@@ -16,6 +16,7 @@ import {
   VisibilityOff,
   Login as LoginIcon,
   ContentCopy,
+  Google as GoogleIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +28,7 @@ export const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [copySuccess, setCopySuccess] = useState('');
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,6 +72,19 @@ export const Login: React.FC = () => {
       setTimeout(() => setCopySuccess(''), 2000);
     } catch (err) {
       console.error('コピーに失敗しました:', err);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      await loginWithGoogle();
+      // Google OAuthはリダイレクトが発生するため、ここではnavigateしない
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Googleログインに失敗しました');
+      setLoading(false);
     }
   };
 
@@ -161,7 +175,37 @@ export const Login: React.FC = () => {
                   py: 1.5,
                 }}
               >
-                {loading ? 'ログイン中...' : 'ログイン'}
+                {loading ? 'ログイン中...' : 'メールでログイン'}
+              </Button>
+
+              <Box sx={{ position: 'relative', my: 2 }}>
+                <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+                  <Typography variant="body2" color="textSecondary" sx={{ px: 2 }}>
+                    または
+                  </Typography>
+                  <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+                </Box>
+              </Box>
+
+              <Button
+                fullWidth
+                variant="outlined"
+                size="large"
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                startIcon={<GoogleIcon />}
+                sx={{
+                  borderColor: '#4285F4',
+                  color: '#4285F4',
+                  '&:hover': {
+                    borderColor: '#357ae8',
+                    backgroundColor: 'rgba(66, 133, 244, 0.04)',
+                  },
+                  py: 1.5,
+                }}
+              >
+                Googleでログイン
               </Button>
 
               <Button
