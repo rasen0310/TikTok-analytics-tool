@@ -536,11 +536,19 @@ export const AIReport: React.FC = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                            },
                             scales: {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            interaction: {
+                              intersect: false,
+                              mode: 'index' as const
+                            },
+                            onHover: () => {},
                             animation: {
                               duration: 1000,
                               onComplete: function(context: any) {
@@ -590,11 +598,19 @@ export const AIReport: React.FC = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                            },
                             scales: {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            interaction: {
+                              intersect: false,
+                              mode: 'index' as const
+                            },
+                            onHover: () => {},
                             animation: {
                               duration: 1000,
                               onComplete: function(context: any) {
@@ -644,11 +660,19 @@ export const AIReport: React.FC = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                            },
                             scales: {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            interaction: {
+                              intersect: false,
+                              mode: 'index' as const
+                            },
+                            onHover: () => {},
                             animation: {
                               duration: 1000,
                               onComplete: function(context: any) {
@@ -698,11 +722,19 @@ export const AIReport: React.FC = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                            },
                             scales: {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            interaction: {
+                              intersect: false,
+                              mode: 'index' as const
+                            },
+                            onHover: () => {},
                             animation: {
                               duration: 1000,
                               onComplete: function(context: any) {
@@ -752,11 +784,19 @@ export const AIReport: React.FC = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                            },
                             scales: {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            interaction: {
+                              intersect: false,
+                              mode: 'index' as const
+                            },
+                            onHover: () => {},
                             animation: {
                               duration: 1000,
                               onComplete: function(context: any) {
@@ -806,26 +846,42 @@ export const AIReport: React.FC = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                            },
                             scales: {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            interaction: {
+                              intersect: false,
+                              mode: 'index' as const
+                            },
+                            onHover: () => {},
                             animation: {
                               duration: 1000,
-                              onComplete: function(context) {
+                              onComplete: function(context: any) {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
-                                ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = '#333';
+                                ctx.save();
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.fillStyle = 'black';
                                 ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
-                                chart.data.datasets[0].data.forEach((value, index) => {
+                                ctx.textBaseline = 'middle';
+                                
+                                chart.data.datasets[0].data.forEach((value: number, index: number) => {
                                   const meta = chart.getDatasetMeta(0);
-                                  const bar = meta.data[index];
-                                  const formattedValue = `${(value as number).toFixed(1)}秒`;
-                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                  const bar = meta.data[index] as any;
+                                  if (bar && bar.x !== undefined && bar.y !== undefined && bar.base !== undefined) {
+                                    const formattedValue = `${value.toFixed(1)}秒`;
+                                    const yPos = bar.y + (bar.base - bar.y) / 2;
+                                    ctx.fillText(formattedValue, bar.x, yPos);
+                                  }
                                 });
+                                
+                                ctx.restore();
                               }
                             }
                           }}
