@@ -44,7 +44,7 @@ export const Login: React.FC = () => {
 
     try {
       await login(email, password);
-      navigate('/');
+      navigate('/dashboard');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'ログインに失敗しました');
     } finally {

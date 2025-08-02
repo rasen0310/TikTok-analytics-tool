@@ -68,8 +68,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkSession();
 
     // Auth状態の変更を監視
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'ユーザー'
+        });
+        
+        // OAuth認証成功時の処理
+        if (window.location.pathname === '/login' || window.location.pathname === '/') {
+          window.location.href = '/dashboard';
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      } else if (session?.user) {
         setUser({
           id: session.user.id,
           email: session.user.email || '',
@@ -135,7 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/dashboard`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

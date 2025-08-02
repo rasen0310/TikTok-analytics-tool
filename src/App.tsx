@@ -75,6 +75,7 @@ function App() {
               </PrivateRoute>
             }>
               <Route index element={<Dashboard />} />
+              <Route path="dashboard" element={<Dashboard />} />
               <Route path="competitor" element={<CompetitorAnalysis />} />
               <Route path="ai-report" element={<AIReport />} />
               <Route path="data-table" element={<DataTable />} />
