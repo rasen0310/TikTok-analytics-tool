@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Box, 
@@ -122,6 +123,25 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
             <Box sx={{ mt: 4, p: 3, backgroundColor: 'rgba(66, 133, 244, 0.04)', borderRadius: 2 }}>
               <Typography variant="body2" color="textSecondary" align="center">
                 🔒 セキュアで安全なGoogle OAuth認証を使用しています
+              </Typography>
+            </Box>
+
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+              <Typography variant="body2" color="textSecondary">
+                ご利用にあたって、
+                <Link 
+                  to="/privacy-policy" 
+                  style={{ 
+                    color: '#FE2C55', 
+                    textDecoration: 'none',
+                    fontWeight: 'medium'
+                  }}
+                  onMouseEnter={(e) => (e.target as HTMLElement).style.textDecoration = 'underline'}
+                  onMouseLeave={(e) => (e.target as HTMLElement).style.textDecoration = 'none'}
+                >
+                  プライバシーポリシー
+                </Link>
+                をご確認ください
               </Typography>
             </Box>
           </Paper>
