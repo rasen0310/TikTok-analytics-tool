@@ -8,7 +8,6 @@ import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { CompetitorAnalysis } from './pages/CompetitorAnalysis';
 import { AIReport } from './pages/AIReport';
-import { Settings } from './pages/Settings';
 import { DataTable } from './pages/DataTable';
 import { TikTokCallback } from './pages/TikTokCallback';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
@@ -95,7 +94,6 @@ function App() {
                 <Route path="competitor" element={<CompetitorAnalysis />} />
                 <Route path="ai-report" element={<AIReport />} />
                 <Route path="data-table" element={<DataTable />} />
-                <Route path="settings" element={<Settings />} />
               </Route>
             </Routes>
           </BrowserRouter>
