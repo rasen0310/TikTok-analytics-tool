@@ -541,7 +541,6 @@ export const AIReport: React.FC = () => {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
-                            plugins: { legend: { display: false } },
                             animation: {
                               duration: 1000,
                               onComplete: function(context: any) {
@@ -596,7 +595,6 @@ export const AIReport: React.FC = () => {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
-                            plugins: { legend: { display: false } },
                             animation: {
                               duration: 1000,
                               onComplete: function(context: any) {
@@ -651,7 +649,6 @@ export const AIReport: React.FC = () => {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
-                            plugins: { legend: { display: false } },
                             animation: {
                               duration: 1000,
                               onComplete: function(context: any) {
@@ -706,7 +703,6 @@ export const AIReport: React.FC = () => {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
-                            plugins: { legend: { display: false } },
                             animation: {
                               duration: 1000,
                               onComplete: function(context: any) {
@@ -761,7 +757,6 @@ export const AIReport: React.FC = () => {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
-                            plugins: { legend: { display: false } },
                             animation: {
                               duration: 1000,
                               onComplete: function(context: any) {
