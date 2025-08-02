@@ -67,16 +67,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // OAuth認証成功時のリダイレクト処理
         const currentPath = window.location.pathname;
         console.log('Current path after sign in:', currentPath);
-        if (currentPath === '/login' || currentPath === '/') {
+        if (currentPath === '/') {
           console.log('Redirecting to dashboard after OAuth success');
           window.history.replaceState(null, '', '/dashboard');
           window.dispatchEvent(new PopStateEvent('popstate'));
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
-        // ログアウト時はログインページにリダイレクト
-        if (window.location.pathname !== '/login') {
-          window.history.replaceState(null, '', '/login');
+        // ログアウト時はルートページにリダイレクト（PrivateRouteがログイン画面を表示）
+        if (window.location.pathname !== '/') {
+          window.history.replaceState(null, '', '/');
           window.dispatchEvent(new PopStateEvent('popstate'));
         }
       } else if (session?.user) {

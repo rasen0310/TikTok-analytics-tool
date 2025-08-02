@@ -9,7 +9,6 @@ import { CompetitorAnalysis } from './pages/CompetitorAnalysis';
 import { AIReport } from './pages/AIReport';
 import { Settings } from './pages/Settings';
 import { DataTable } from './pages/DataTable';
-import { Login } from './pages/Login';
 
 const theme = createTheme({
   palette: {
@@ -68,7 +67,6 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={<Login />} />
             <Route path="/" element={
               <PrivateRoute>
                 <Layout />
