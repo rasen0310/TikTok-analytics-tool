@@ -54,7 +54,7 @@ export const Dashboard: React.FC = () => {
             {mode === 'production' && !isConfigured && (
               <Box sx={{ mt: 1 }}>
                 <Typography variant="body2">
-                  設定ページでTikTok APIキーを設定してください。設定されていない場合はモックデータが使用されます。
+                  TikTok APIキーが設定されていないため、モックデータを使用しています。
                 </Typography>
               </Box>
             )}
@@ -82,7 +82,7 @@ export const Dashboard: React.FC = () => {
                 {mode === 'development' && (
                   <Box sx={{ mt: 1 }}>
                     <Typography variant="body2">
-                      現在モックデータを使用しています。実際のTikTok APIを使用するには設定ページでAPIキーを設定してください。
+                      現在モックデータを使用しています。実際のTikTok APIを使用するにはAPIキーが必要です。
                     </Typography>
                   </Box>
                 )}
