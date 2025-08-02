@@ -5,129 +5,32 @@ import {
   Typography,
   Paper,
   TextField,
-  Button,
   Stack,
   Alert,
-  InputAdornment,
-  Tabs,
-  Tab,
-  Chip,
+  Avatar,
+  Divider,
 } from '@mui/material';
 import {
-  Save as SaveIcon,
-  Api as ApiIcon,
+  Person as PersonIcon,
+  Email as EmailIcon,
+  Google as GoogleIcon,
 } from '@mui/icons-material';
-import { tiktokClient } from '../lib/tiktok';
 import { useAuth } from '../contexts/AuthContext';
 
-interface SettingsData {
-  name: string;
-  email: string;
-  tiktokClientKey: string;
-  tiktokAccessToken: string;
-}
-
 export const Settings: React.FC = () => {
-  const [tabValue, setTabValue] = React.useState(0);
-  const [saved, setSaved] = React.useState(false);
-  const [apiStatus, setApiStatus] = React.useState(tiktokClient.getStatus());
-  const { user, updateProfile } = useAuth();
-  
-  const [formData, setFormData] = React.useState<SettingsData>({
-    name: '',
-    email: '',
-    tiktokClientKey: '',
-    tiktokAccessToken: '',
-  });
+  const { user } = useAuth();
 
-  const [errors, setErrors] = React.useState<Partial<SettingsData>>({});
-
-  React.useEffect(() => {
-    if (user) {
-      setFormData(prev => ({
-        ...prev,
-        name: user.name,
-        email: user.email,
-      }));
-    }
-    
-    // 保存されたAPI設定を読み込み
-    const savedApiSettings = localStorage.getItem('tiktok-api-settings');
-    if (savedApiSettings) {
-      const apiSettings = JSON.parse(savedApiSettings);
-      setFormData(prev => ({
-        ...prev,
-        tiktokClientKey: apiSettings.clientKey || '',
-        tiktokAccessToken: apiSettings.accessToken || '',
-      }));
-    }
-  }, [user]);
-
-  const handleChange = (field: keyof SettingsData) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData({
-      ...formData,
-      [field]: event.target.value,
-    });
-    
-    if (errors[field]) {
-      setErrors({
-        ...errors,
-        [field]: '',
-      });
-    }
-  };
-
-  const validate = () => {
-    const newErrors: Partial<SettingsData> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = '名前を入力してください';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'メールアドレスを入力してください';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = '正しいメールアドレスを入力してください';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = async () => {
-    if (validate()) {
-      try {
-        await updateProfile(formData.name, formData.email);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
-      } catch (error) {
-        console.error('Profile update failed:', error);
-      }
-    }
-  };
-
-  const handleApiSave = () => {
-    // API設定をローカルストレージに保存
-    const apiSettings = {
-      clientKey: formData.tiktokClientKey,
-      accessToken: formData.tiktokAccessToken,
-    };
-    
-    localStorage.setItem('tiktok-api-settings', JSON.stringify(apiSettings));
-    
-    // 環境変数を設定（開発環境用）
-    if (formData.tiktokClientKey) {
-      // 注意: ブラウザでは環境変数を直接設定できないため、
-      // 実際の環境ではサーバー再起動が必要です
-      console.log('TikTok Client Key saved to localStorage');
-    }
-    
-    setApiStatus(tiktokClient.getStatus());
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-  };
+  if (!user) {
+    return (
+      <Container maxWidth="md">
+        <Box sx={{ py: 4 }}>
+          <Alert severity="warning">
+            ユーザー情報を読み込めませんでした。再度ログインしてください。
+          </Alert>
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md">
@@ -136,176 +39,85 @@ export const Settings: React.FC = () => {
           設定
         </Typography>
 
-        <Paper sx={{ mb: 3 }}>
-          <Tabs
-            value={tabValue}
-            onChange={(_, newValue) => setTabValue(newValue)}
-            sx={{
-              borderBottom: 1,
-              borderColor: 'divider',
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontWeight: 500,
-                fontSize: '1rem',
-              }
-            }}
-          >
-            <Tab label="アカウント情報" />
-            <Tab label="API設定" />
-          </Tabs>
-        </Paper>
-
-        {tabValue === 0 && (
-          <Paper sx={{ p: 4 }}>
-            <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
-              アカウント情報
+        <Paper sx={{ p: 4 }}>
+          <Box sx={{ mb: 4, textAlign: 'center' }}>
+            <Avatar 
+              sx={{ 
+                width: 80, 
+                height: 80, 
+                mx: 'auto', 
+                mb: 2,
+                backgroundColor: '#FE2C55',
+                fontSize: '2rem'
+              }}
+            >
+              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </Avatar>
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+              {user.name}
             </Typography>
-
-            <Stack spacing={3}>
-              <Box>
-                <Typography variant="subtitle2" gutterBottom sx={{ mb: 1 }}>
-                  基本情報
-                </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  Google OAuthで認証されたアカウント情報です。名前は変更可能ですが、メールアドレスはGoogleアカウントと連動しています。
-                </Alert>
-                
-                <Stack spacing={2}>
-                  <TextField
-                    fullWidth
-                    label="名前"
-                    value={formData.name}
-                    onChange={handleChange('name')}
-                    error={!!errors.name}
-                    helperText={errors.name}
-                  />
-                  
-                  <TextField
-                    fullWidth
-                    label="メールアドレス"
-                    value={formData.email}
-                    onChange={handleChange('email')}
-                    error={!!errors.email}
-                    helperText={errors.email || 'Googleアカウントのメールアドレス'}
-                    disabled
-                  />
-                </Stack>
-              </Box>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Button
-                  variant="contained"
-                  startIcon={<SaveIcon />}
-                  onClick={handleSave}
-                  sx={{
-                    backgroundColor: '#FE2C55',
-                    '&:hover': {
-                      backgroundColor: '#E01E45',
-                    },
-                  }}
-                >
-                  変更を保存
-                </Button>
-                
-                {saved && (
-                  <Alert severity="success" sx={{ ml: 2 }}>
-                    設定を保存しました
-                  </Alert>
-                )}
-              </Box>
-            </Stack>
-          </Paper>
-        )}
-
-        {tabValue === 1 && (
-          <Paper sx={{ p: 4 }}>
-            <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
-              TikTok API設定
-            </Typography>
-
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" gutterBottom sx={{ mb: 2 }}>
-                API状態
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+              <GoogleIcon sx={{ color: '#4285F4' }} />
+              <Typography variant="body2" color="textSecondary">
+                Google アカウントで認証済み
               </Typography>
-              <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                <Chip 
-                  label={apiStatus.mode === 'development' ? 'モックモード' : '本番モード'} 
-                  color={apiStatus.mode === 'development' ? 'warning' : 'success'}
-                  variant="outlined"
-                  size="small"
-                />
-                <Chip 
-                  label={apiStatus.configured ? '設定済み' : '未設定'} 
-                  color={apiStatus.configured ? 'success' : 'warning'}
-                  variant="outlined"
-                  size="small"
-                />
-                <Chip 
-                  label={`Client: ${apiStatus.clientType}`} 
-                  variant="outlined"
-                  size="small"
-                />
-              </Stack>
-              
-              {apiStatus.mode === 'development' && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  現在モックデータを使用しています。実際のTikTok APIを使用するには、下記のClient Keyを設定してください。
-                </Alert>
-              )}
             </Box>
+          </Box>
 
-            <Stack spacing={3}>
-              <Box>
-                <Typography variant="subtitle2" gutterBottom sx={{ mb: 1 }}>
-                  TikTok for Developers 設定
-                </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  <strong>開発者向け情報:</strong> TikTok for Developersで取得したClient Keyを入力してください。
-                  設定することで本番APIに自動切り替わります。未設定の場合はモックデータを使用します。
-                </Alert>
-                
-                <TextField
-                  fullWidth
-                  label="Client Key"
-                  value={formData.tiktokClientKey}
-                  onChange={handleChange('tiktokClientKey')}
-                  error={!!errors.tiktokClientKey}
-                  helperText={errors.tiktokClientKey || 'TikTok for Developersで取得したClient Keyを入力'}
-                  placeholder="aw***********************"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <ApiIcon color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Box>
+          <Divider sx={{ my: 3 }} />
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Button
-                  variant="contained"
-                  startIcon={<SaveIcon />}
-                  onClick={handleApiSave}
-                  sx={{
-                    backgroundColor: '#FE2C55',
-                    '&:hover': {
-                      backgroundColor: '#E01E45',
-                    },
-                  }}
-                >
-                  API設定を保存
-                </Button>
-                
-                {saved && (
-                  <Alert severity="success" sx={{ ml: 2 }}>
-                    API設定を保存しました
-                  </Alert>
-                )}
-              </Box>
-            </Stack>
-          </Paper>
-        )}
+          <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 'bold' }}>
+            アカウント情報
+          </Typography>
+
+          <Alert severity="info" sx={{ mb: 3 }}>
+            Google OAuth認証により取得された情報です。これらの情報はGoogleアカウントと連動しており、変更はGoogleアカウント設定から行ってください。
+          </Alert>
+
+          <Stack spacing={3}>
+            <TextField
+              fullWidth
+              label="表示名"
+              value={user.name}
+              disabled
+              InputProps={{
+                startAdornment: <PersonIcon sx={{ mr: 1, color: 'action.active' }} />,
+              }}
+              helperText="Googleアカウントに登録されている名前"
+            />
+            
+            <TextField
+              fullWidth
+              label="メールアドレス"
+              value={user.email}
+              disabled
+              InputProps={{
+                startAdornment: <EmailIcon sx={{ mr: 1, color: 'action.active' }} />,
+              }}
+              helperText="Googleアカウントのメールアドレス"
+            />
+
+            <TextField
+              fullWidth
+              label="ユーザーID"
+              value={user.id}
+              disabled
+              helperText="システム内部で使用される一意のID"
+            />
+          </Stack>
+
+          <Box sx={{ mt: 4, p: 3, backgroundColor: 'rgba(66, 133, 244, 0.04)', borderRadius: 2 }}>
+            <Typography variant="body2" color="textSecondary" align="center">
+              <strong>プライバシーについて:</strong> 
+              <br />
+              アカウント情報の変更や削除をご希望の場合は、Googleアカウント設定から行ってください。
+              <br />
+              アプリケーションからアカウントを削除したい場合は、ログアウト後に再度アクセスしないことで、
+              <br />
+              自動的にアカウント情報は保持されなくなります。
+            </Typography>
+          </Box>
+        </Paper>
       </Box>
     </Container>
   );
