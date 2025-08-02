@@ -11,10 +11,8 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => void;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   updateProfile: (name: string, email: string) => Promise<void>;
 }
 
@@ -28,13 +26,6 @@ export const useAuth = () => {
   return context;
 };
 
-// デフォルトユーザー情報
-const DEFAULT_USER = {
-  id: '1',
-  email: 'admin@tiktok-analytics.com',
-  name: '管理者',
-  password: 'admin123'
-};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -51,12 +42,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: session.user.email || '',
             name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'ユーザー'
           });
-        } else {
-          // ローカルストレージから認証状態を復元（後方互換性のため）
-          const savedUser = localStorage.getItem('tiktok-analytics-user');
-          if (savedUser) {
-            setUser(JSON.parse(savedUser));
-          }
         }
       } catch (error) {
         console.error('Session check error:', error);
@@ -99,47 +84,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = async (email: string, password: string) => {
-    setLoading(true);
-    
-    try {
-      // Supabaseで認証を試みる
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        // Supabaseでエラーが発生した場合、ローカル認証にフォールバック
-        const savedCredentials = localStorage.getItem('tiktok-analytics-credentials');
-        const credentials = savedCredentials ? JSON.parse(savedCredentials) : DEFAULT_USER;
-        
-        if (email === credentials.email && password === credentials.password) {
-          const userData = {
-            id: credentials.id,
-            email: credentials.email,
-            name: credentials.name
-          };
-          
-          setUser(userData);
-          localStorage.setItem('tiktok-analytics-user', JSON.stringify(userData));
-        } else {
-          throw new Error('メールアドレスまたはパスワードが正しくありません');
-        }
-      } else if (data.user) {
-        // Supabaseでログイン成功
-        setUser({
-          id: data.user.id,
-          email: data.user.email || '',
-          name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'ユーザー'
-        });
-      }
-    } catch (error) {
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const loginWithGoogle = async () => {
     setLoading(true);
@@ -179,62 +123,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const changePassword = async (currentPassword: string, newPassword: string) => {
-    if (!user) {
-      throw new Error('ログインが必要です');
-    }
-
-    // 現在のパスワードを確認
-    const savedCredentials = localStorage.getItem('tiktok-analytics-credentials');
-    const credentials = savedCredentials ? JSON.parse(savedCredentials) : DEFAULT_USER;
-    
-    if (currentPassword !== credentials.password) {
-      throw new Error('現在のパスワードが正しくありません');
-    }
-
-    // 新しいパスワードで更新
-    const updatedCredentials = {
-      ...credentials,
-      password: newPassword
-    };
-    
-    localStorage.setItem('tiktok-analytics-credentials', JSON.stringify(updatedCredentials));
-  };
 
   const updateProfile = async (name: string, email: string) => {
     if (!user) {
       throw new Error('ログインが必要です');
     }
 
-    // プロフィール情報を更新
-    const savedCredentials = localStorage.getItem('tiktok-analytics-credentials');
-    const credentials = savedCredentials ? JSON.parse(savedCredentials) : DEFAULT_USER;
-    
-    const updatedCredentials = {
-      ...credentials,
-      name,
-      email
-    };
-    
-    const updatedUser = {
-      id: user.id,
-      name,
-      email
-    };
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: { full_name: name }
+      });
 
-    localStorage.setItem('tiktok-analytics-credentials', JSON.stringify(updatedCredentials));
-    localStorage.setItem('tiktok-analytics-user', JSON.stringify(updatedUser));
-    setUser(updatedUser);
+      if (error) {
+        throw new Error('プロフィールの更新に失敗しました');
+      }
+
+      if (data.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email || email,
+          name: name
+        });
+      }
+    } catch (error) {
+      throw error;
+    }
   };
 
   const value = {
     user,
     isAuthenticated: !!user,
     loading,
-    login,
     loginWithGoogle,
     logout,
-    changePassword,
     updateProfile
   };
 
