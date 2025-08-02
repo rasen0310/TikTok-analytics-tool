@@ -22,6 +22,7 @@ import {
   Menu as MenuIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
+  TableChart as TableChartIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -38,6 +39,7 @@ const menuItems: MenuItem[] = [
   { text: 'ダッシュボード', icon: <DashboardIcon />, path: '/' },
   { text: '競合分析', icon: <AnalyticsIcon />, path: '/competitor' },
   { text: 'AIレポート', icon: <AssessmentIcon />, path: '/ai-report' },
+  { text: '読み込みデータ', icon: <TableChartIcon />, path: '/data-table' },
 ];
 
 export const Layout: React.FC = () => {
@@ -183,6 +185,8 @@ export const Layout: React.FC = () => {
           >
             {location.pathname === '/settings' 
               ? '設定' 
+              : location.pathname === '/data-table'
+              ? '読み込みデータ'
               : menuItems.find(item => item.path === location.pathname)?.text || 'TikTok Analytics'}
           </Typography>
           <Box sx={{ flexGrow: 1 }} />

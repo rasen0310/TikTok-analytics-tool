@@ -5,210 +5,47 @@ import {
   Typography,
   Paper,
   TextField,
-  Button,
   Stack,
   Alert,
-  IconButton,
-  InputAdornment,
+  Avatar,
   Divider,
-  Tabs,
-  Tab,
+  Button,
   Chip,
+  CircularProgress,
 } from '@mui/material';
 import {
-  Visibility,
-  VisibilityOff,
-  Save as SaveIcon,
-  Api as ApiIcon,
+  Person as PersonIcon,
+  Email as EmailIcon,
+  Google as GoogleIcon,
+  Link as LinkIcon,
+  LinkOff as LinkOffIcon,
+  Verified as VerifiedIcon,
 } from '@mui/icons-material';
-import { tiktokClient } from '../lib/tiktok';
 import { useAuth } from '../contexts/AuthContext';
-
-interface SettingsData {
-  name: string;
-  email: string;
-  tiktokClientKey: string;
-  tiktokAccessToken: string;
-}
-
-interface PasswordChangeData {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
+import { useTikTokAuth } from '../contexts/TikTokAuthContext';
 
 export const Settings: React.FC = () => {
-  const [tabValue, setTabValue] = React.useState(0);
-  const [showAccessToken, setShowAccessToken] = React.useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = React.useState(false);
-  const [showNewPassword, setShowNewPassword] = React.useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
-  const [passwordChangeSuccess, setPasswordChangeSuccess] = React.useState(false);
-  const [apiStatus, setApiStatus] = React.useState(tiktokClient.getStatus());
-  const { user, updateProfile, changePassword } = useAuth();
-  const [formData, setFormData] = React.useState<SettingsData>({
-    name: '',
-    email: '',
-    tiktokClientKey: '',
-    tiktokAccessToken: '',
-  });
+  const { user } = useAuth();
+  const { 
+    isConnected, 
+    user: tiktokUser, 
+    loading: tiktokLoading, 
+    error: tiktokError,
+    connectTikTok, 
+    disconnectTikTok 
+  } = useTikTokAuth();
 
-  const [passwordData, setPasswordData] = React.useState<PasswordChangeData>({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-
-  const [errors, setErrors] = React.useState<Partial<SettingsData>>({});
-  const [passwordErrors, setPasswordErrors] = React.useState<Partial<PasswordChangeData>>({});
-
-  // Load saved settings on component mount
-  React.useEffect(() => {
-    const savedSettings = localStorage.getItem('tiktokAnalyticsSettings');
-    if (savedSettings) {
-      const parsedSettings = JSON.parse(savedSettings);
-      setFormData({
-        name: parsedSettings.name || user?.name || '',
-        email: parsedSettings.email || user?.email || '',
-        tiktokClientKey: parsedSettings.tiktokClientKey || '',
-        tiktokAccessToken: parsedSettings.tiktokAccessToken || '',
-      });
-    } else if (user) {
-      setFormData(prev => ({
-        ...prev,
-        name: user.name,
-        email: user.email,
-      }));
-    }
-    
-    // APIステータスを初期化
-    setApiStatus(tiktokClient.getStatus());
-  }, [user]);
-
-  const handleChange = (field: keyof SettingsData) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData({
-      ...formData,
-      [field]: event.target.value,
-    });
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors({
-        ...errors,
-        [field]: undefined,
-      });
-    }
-    setSaved(false);
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Partial<SettingsData> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = '名前を入力してください';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'メールアドレスを入力してください';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = '有効なメールアドレスを入力してください';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = async () => {
-    if (validateForm()) {
-      try {
-        // プロフィール情報を更新
-        await updateProfile(formData.name, formData.email);
-        
-        // ローカルストレージにAPI設定を保存
-        localStorage.setItem('tiktokAnalyticsSettings', JSON.stringify(formData));
-        
-        // TikTokクライアントを再初期化（APIキーが変更された場合）
-        tiktokClient.reinitialize();
-        setApiStatus(tiktokClient.getStatus());
-        
-        setSaved(true);
-        // Auto-hide success message after 3 seconds
-        setTimeout(() => setSaved(false), 3000);
-      } catch (error) {
-        console.error('プロフィール更新エラー:', error);
-      }
-    }
-  };
-
-
-  const handleClickShowAccessToken = () => {
-    setShowAccessToken(!showAccessToken);
-  };
-
-  const handlePasswordChange = (field: keyof PasswordChangeData) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setPasswordData({
-      ...passwordData,
-      [field]: event.target.value,
-    });
-    // Clear error when user starts typing
-    if (passwordErrors[field]) {
-      setPasswordErrors({
-        ...passwordErrors,
-        [field]: undefined,
-      });
-    }
-    setPasswordChangeSuccess(false);
-  };
-
-  const validatePasswordChange = (): boolean => {
-    const newErrors: Partial<PasswordChangeData> = {};
-
-    if (!passwordData.currentPassword.trim()) {
-      newErrors.currentPassword = '現在のパスワードを入力してください';
-    }
-
-    if (!passwordData.newPassword.trim()) {
-      newErrors.newPassword = '新しいパスワードを入力してください';
-    } else if (passwordData.newPassword.length < 6) {
-      newErrors.newPassword = 'パスワードは6文字以上で入力してください';
-    }
-
-    if (!passwordData.confirmPassword.trim()) {
-      newErrors.confirmPassword = 'パスワード確認を入力してください';
-    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
-      newErrors.confirmPassword = 'パスワードが一致しません';
-    }
-
-    setPasswordErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handlePasswordSave = async () => {
-    if (validatePasswordChange()) {
-      try {
-        await changePassword(passwordData.currentPassword, passwordData.newPassword);
-        setPasswordData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
-        });
-        setPasswordChangeSuccess(true);
-        setTimeout(() => setPasswordChangeSuccess(false), 3000);
-      } catch (error) {
-        setPasswordErrors({
-          currentPassword: error instanceof Error ? error.message : 'パスワード変更に失敗しました'
-        });
-      }
-    }
-  };
-
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
+  if (!user) {
+    return (
+      <Container maxWidth="md">
+        <Box sx={{ py: 4 }}>
+          <Alert severity="warning">
+            ユーザー情報を読み込めませんでした。再度ログインしてください。
+          </Alert>
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md">
@@ -217,350 +54,237 @@ export const Settings: React.FC = () => {
           設定
         </Typography>
 
-        <Paper sx={{ mb: 3 }}>
-          <Tabs
-            value={tabValue}
-            onChange={handleTabChange}
-            sx={{
-              borderBottom: 1,
-              borderColor: 'divider',
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontWeight: 500,
-              }
-            }}
-          >
-            <Tab label="アカウント情報" />
-            <Tab label="API設定" />
-            <Tab label="パスワード変更" />
-          </Tabs>
-        </Paper>
+        <Paper sx={{ p: 4 }}>
+          <Box sx={{ mb: 4, textAlign: 'center' }}>
+            <Avatar 
+              sx={{ 
+                width: 80, 
+                height: 80, 
+                mx: 'auto', 
+                mb: 2,
+                backgroundColor: '#FE2C55',
+                fontSize: '2rem'
+              }}
+            >
+              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </Avatar>
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+              {user.name}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+              <GoogleIcon sx={{ color: '#4285F4' }} />
+              <Typography variant="body2" color="textSecondary">
+                Google アカウントで認証済み
+              </Typography>
+            </Box>
+          </Box>
 
-        {tabValue === 0 && (
-          <Paper sx={{ p: 4 }}>
-          <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+          <Divider sx={{ my: 3 }} />
+
+          <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 'bold' }}>
             アカウント情報
           </Typography>
 
+          <Alert severity="info" sx={{ mb: 3 }}>
+            Google OAuth認証により取得された情報です。これらの情報はGoogleアカウントと連動しており、変更はGoogleアカウント設定から行ってください。
+          </Alert>
+
           <Stack spacing={3}>
-            <Box>
-              <Typography variant="subtitle2" gutterBottom sx={{ mb: 1 }}>
-                基本情報
-              </Typography>
-              <Stack spacing={2}>
-                <TextField
-                  fullWidth
-                  label="名前"
-                  value={formData.name}
-                  onChange={handleChange('name')}
-                  error={!!errors.name}
-                  helperText={errors.name}
-                  placeholder="山田 太郎"
-                />
-                <TextField
-                  fullWidth
-                  label="メールアドレス"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange('email')}
-                  error={!!errors.email}
-                  helperText={errors.email}
-                  placeholder="example@email.com"
-                />
-              </Stack>
-            </Box>
+            <TextField
+              fullWidth
+              label="表示名"
+              value={user.name}
+              disabled
+              InputProps={{
+                startAdornment: <PersonIcon sx={{ mr: 1, color: 'action.active' }} />,
+              }}
+              helperText="Googleアカウントに登録されている名前"
+            />
+            
+            <TextField
+              fullWidth
+              label="メールアドレス"
+              value={user.email}
+              disabled
+              InputProps={{
+                startAdornment: <EmailIcon sx={{ mr: 1, color: 'action.active' }} />,
+              }}
+              helperText="Googleアカウントのメールアドレス"
+            />
 
-
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<SaveIcon />}
-                onClick={handleSave}
-                sx={{
-                  backgroundColor: '#FE2C55',
-                  '&:hover': {
-                    backgroundColor: '#E01E45',
-                  },
-                }}
-              >
-                設定を保存
-              </Button>
-            </Box>
-
-            {saved && (
-              <Alert severity="success" sx={{ mt: 2 }}>
-                設定が正常に保存されました
-              </Alert>
-            )}
+            <TextField
+              fullWidth
+              label="ユーザーID"
+              value={user.id}
+              disabled
+              helperText="システム内部で使用される一意のID"
+            />
           </Stack>
-          </Paper>
-        )}
 
-        {tabValue === 1 && (
-          <Paper sx={{ p: 4 }}>
-            <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
-              TikTok API設定
+          <Box sx={{ mt: 4, p: 3, backgroundColor: 'rgba(66, 133, 244, 0.04)', borderRadius: 2 }}>
+            <Typography variant="body2" color="textSecondary" align="center">
+              <strong>プライバシーについて:</strong> 
+              <br />
+              アカウント情報の変更や削除をご希望の場合は、Googleアカウント設定から行ってください。
+              <br />
+              アプリケーションからアカウントを削除したい場合は、ログアウト後に再度アクセスしないことで、
+              <br />
+              自動的にアカウント情報は保持されなくなります。
             </Typography>
+          </Box>
+        </Paper>
 
-            {/* API ステータス表示 */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                現在のAPIステータス
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                <Chip 
-                  label={apiStatus.mode === 'development' ? 'モックデータ' : '本番API'} 
-                  color={apiStatus.mode === 'development' ? 'secondary' : 'primary'}
-                  variant="outlined"
-                  size="small"
-                />
-                <Chip 
-                  label={apiStatus.configured ? '設定済み' : '未設定'} 
-                  color={apiStatus.configured ? 'success' : 'warning'}
-                  variant="outlined"
-                  size="small"
-                />
-                <Chip 
-                  label={`Client: ${apiStatus.clientType}`} 
-                  variant="outlined"
-                  size="small"
-                />
-              </Stack>
-              
-              {apiStatus.mode === 'development' && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  現在モックデータを使用しています。実際のTikTok APIを使用するには、下記のClient Keyを設定してください。
-                </Alert>
-              )}
-              
-              {apiStatus.mode === 'production' && !apiStatus.hasAccessToken && (
-                <Alert severity="warning" sx={{ mb: 2 }}>
-                  本番APIモードですが、アクセストークンが設定されていません。TikTok連携タブでOAuth認証を完了してください。
-                </Alert>
-              )}
-            </Box>
+        {/* TikTok連携セクション */}
+        <Paper sx={{ p: 4, mt: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 'bold' }}>
+            TikTok連携
+          </Typography>
 
-            <Stack spacing={3}>
-              <Box>
-                <Typography variant="subtitle2" gutterBottom sx={{ mb: 1 }}>
-                  TikTok for Developers 設定
-                </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  <strong>開発者向け情報:</strong> TikTok for Developersで取得したClient Keyを入力してください。
-                  設定することで本番APIに自動切り替わります。未設定の場合はモックデータを使用します。
-                </Alert>
-                
-                <TextField
-                  fullWidth
-                  label="Client Key"
-                  value={formData.tiktokClientKey}
-                  onChange={handleChange('tiktokClientKey')}
-                  error={!!errors.tiktokClientKey}
-                  helperText={errors.tiktokClientKey || 'TikTok for Developersで取得したClient Keyを入力'}
-                  placeholder="aw***********************"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <ApiIcon color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Box>
+          {tiktokError && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {tiktokError}
+            </Alert>
+          )}
 
-              <Divider />
-
-              <Box>
-                <Typography variant="subtitle2" gutterBottom sx={{ mb: 1 }}>
-                  アクセストークン（OAuth認証後に自動設定）
-                </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  このトークンはTikTok連携タブでOAuth認証を完了すると自動的に設定されます。
-                  手動での編集は推奨されません。
-                </Alert>
-                
-                <TextField
-                  fullWidth
-                  label="Access Token"
-                  type={showAccessToken ? 'text' : 'password'}
-                  value={formData.tiktokAccessToken}
-                  onChange={handleChange('tiktokAccessToken')}
-                  error={!!errors.tiktokAccessToken}
-                  helperText="OAuth認証完了後に自動設定されます"
-                  placeholder="••••••••••••••••••••••••••••••••"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="toggle access token visibility"
-                          onClick={handleClickShowAccessToken}
-                          onMouseDown={(e) => e.preventDefault()}
-                          edge="end"
-                        >
-                          {showAccessToken ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Box>
-
-  
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<SaveIcon />}
-                  onClick={handleSave}
-                  sx={{
-                    backgroundColor: '#FE2C55',
-                    '&:hover': {
-                      backgroundColor: '#E01E45',
-                    },
-                  }}
-                >
-                  API設定を保存
-                </Button>
-              </Box>
-
-              {saved && (
-                <Alert severity="success" sx={{ mt: 2 }}>
-                  API設定が正常に保存されました。システムが自動的に再初期化されました。
-                </Alert>
-              )}
-            </Stack>
-          </Paper>
-        )}
-
-        {tabValue === 2 && (
-          <Paper sx={{ p: 4 }}>
-            <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
-              パスワード変更
-            </Typography>
-
-            <Stack spacing={3}>
-              <Alert severity="info" sx={{ mb: 2 }}>
-                セキュリティのため、現在のパスワードを入力してから新しいパスワードを設定してください。
+          {isConnected && tiktokUser ? (
+            <>
+              <Alert severity="success" sx={{ mb: 3 }}>
+                TikTokアカウントが正常に連携されています
               </Alert>
+              
+              <Box sx={{ mb: 4, textAlign: 'center' }}>
+                <Avatar 
+                  src={tiktokUser.avatar_url_100}
+                  sx={{ 
+                    width: 80, 
+                    height: 80, 
+                    mx: 'auto', 
+                    mb: 2,
+                    border: '3px solid #FE2C55'
+                  }}
+                >
+                  {tiktokUser.display_name?.charAt(0).toUpperCase()}
+                </Avatar>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                    {tiktokUser.display_name}
+                  </Typography>
+                  {tiktokUser.is_verified && (
+                    <VerifiedIcon sx={{ color: '#20D5EC', fontSize: 20 }} />
+                  )}
+                </Box>
+                <Typography variant="body2" color="textSecondary">
+                  @{tiktokUser.open_id}
+                </Typography>
+              </Box>
 
-              <TextField
-                fullWidth
-                label="現在のパスワード"
-                type={showCurrentPassword ? 'text' : 'password'}
-                value={passwordData.currentPassword}
-                onChange={handlePasswordChange('currentPassword')}
-                error={!!passwordErrors.currentPassword}
-                helperText={passwordErrors.currentPassword}
-                placeholder="現在のパスワードを入力"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle current password visibility"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        edge="end"
-                      >
-                        {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
+              <Stack spacing={2} sx={{ mb: 3 }}>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <Chip 
+                    label={`フォロワー: ${tiktokUser.follower_count?.toLocaleString() || 0}`}
+                    variant="outlined"
+                    size="small"
+                  />
+                  <Chip 
+                    label={`フォロー中: ${tiktokUser.following_count?.toLocaleString() || 0}`}
+                    variant="outlined"
+                    size="small"
+                  />
+                  <Chip 
+                    label={`いいね: ${tiktokUser.likes_count?.toLocaleString() || 0}`}
+                    variant="outlined"
+                    size="small"
+                  />
+                  <Chip 
+                    label={`動画数: ${tiktokUser.video_count?.toLocaleString() || 0}`}
+                    variant="outlined"
+                    size="small"
+                  />
+                </Box>
+                
+                {tiktokUser.bio_description && (
+                  <TextField
+                    fullWidth
+                    label="プロフィール"
+                    value={tiktokUser.bio_description}
+                    disabled
+                    multiline
+                    maxRows={3}
+                  />
+                )}
+              </Stack>
 
-              <TextField
-                fullWidth
-                label="新しいパスワード"
-                type={showNewPassword ? 'text' : 'password'}
-                value={passwordData.newPassword}
-                onChange={handlePasswordChange('newPassword')}
-                error={!!passwordErrors.newPassword}
-                helperText={passwordErrors.newPassword || '6文字以上で入力してください'}
-                placeholder="新しいパスワードを入力"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle new password visibility"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        edge="end"
-                      >
-                        {showNewPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <TextField
-                fullWidth
-                label="新しいパスワード（確認）"
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordChange('confirmPassword')}
-                error={!!passwordErrors.confirmPassword}
-                helperText={passwordErrors.confirmPassword}
-                placeholder="新しいパスワードを再入力"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle confirm password visibility"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        edge="end"
-                      >
-                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+              <Box sx={{ textAlign: 'center' }}>
                 <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<SaveIcon />}
-                  onClick={handlePasswordSave}
+                  variant="outlined"
+                  color="error"
+                  onClick={disconnectTikTok}
+                  disabled={tiktokLoading}
+                  startIcon={tiktokLoading ? <CircularProgress size={16} /> : <LinkOffIcon />}
                   sx={{
-                    backgroundColor: '#FE2C55',
+                    borderColor: '#FE2C55',
+                    color: '#FE2C55',
                     '&:hover': {
-                      backgroundColor: '#E01E45',
+                      borderColor: '#E01E45',
+                      backgroundColor: 'rgba(254, 44, 85, 0.04)',
                     },
                   }}
                 >
-                  パスワードを変更
+                  {tiktokLoading ? '処理中...' : 'TikTok連携を解除'}
+                </Button>
+              </Box>
+            </>
+          ) : (
+            <>
+              <Alert severity="info" sx={{ mb: 3 }}>
+                TikTokアカウントを連携すると、実際のデータを使用した分析が可能になります。
+                現在はモックデータを使用しています。
+              </Alert>
+              
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" gutterBottom sx={{ mb: 3 }}>
+                  TikTokアカウントと連携して、リアルタイムデータ分析を始めましょう
+                </Typography>
+                
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={connectTikTok}
+                  disabled={tiktokLoading}
+                  startIcon={tiktokLoading ? <CircularProgress size={20} color="inherit" /> : <LinkIcon />}
+                  sx={{
+                    backgroundColor: '#FE2C55',
+                    color: 'white',
+                    py: 2,
+                    px: 4,
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold',
+                    '&:hover': {
+                      backgroundColor: '#E01E45',
+                    },
+                    '&:disabled': {
+                      backgroundColor: 'grey.400',
+                    },
+                  }}
+                >
+                  {tiktokLoading ? 'TikTokに接続中...' : 'TikTokアカウントを連携'}
                 </Button>
               </Box>
 
-              {passwordChangeSuccess && (
-                <Alert severity="success" sx={{ mt: 2 }}>
-                  パスワードが正常に変更されました
-                </Alert>
-              )}
-            </Stack>
-          </Paper>
-        )}
-
-        {tabValue === 0 && (
-          <Paper sx={{ p: 4, mt: 3, backgroundColor: '#f5f5f5' }}>
-            <Typography variant="h6" gutterBottom>
-              セキュリティに関する注意事項
-            </Typography>
-            <Typography variant="body2" color="textSecondary" paragraph>
-              • パスワードは暗号化されてローカルストレージに保存されます
-            </Typography>
-            <Typography variant="body2" color="textSecondary" paragraph>
-              • API認証情報は外部サーバーには送信されません
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              • 定期的にパスワードを変更することをお勧めします
-            </Typography>
-          </Paper>
-        )}
+              <Box sx={{ mt: 3, p: 3, backgroundColor: 'rgba(254, 44, 85, 0.04)', borderRadius: 2 }}>
+                <Typography variant="body2" color="textSecondary" align="center">
+                  <strong>連携について:</strong>
+                  <br />
+                  • 基本プロフィール情報とパブリック統計のみアクセスします
+                  <br />
+                  • 動画の投稿や編集は一切行いません
+                  <br />
+                  • 連携はいつでも解除できます
+                </Typography>
+              </Box>
+            </>
+          )}
+        </Paper>
       </Box>
     </Container>
   );
