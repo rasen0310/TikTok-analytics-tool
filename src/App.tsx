@@ -2,6 +2,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { TikTokAuthProvider } from './contexts/TikTokAuthContext';
 import { PrivateRoute } from './components/PrivateRoute';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
@@ -9,6 +10,7 @@ import { CompetitorAnalysis } from './pages/CompetitorAnalysis';
 import { AIReport } from './pages/AIReport';
 import { Settings } from './pages/Settings';
 import { DataTable } from './pages/DataTable';
+import { TikTokCallback } from './pages/TikTokCallback';
 
 const theme = createTheme({
   palette: {
@@ -65,22 +67,35 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={
-              <PrivateRoute>
-                <Layout />
-              </PrivateRoute>
-            }>
-              <Route index element={<Dashboard />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="competitor" element={<CompetitorAnalysis />} />
-              <Route path="ai-report" element={<AIReport />} />
-              <Route path="data-table" element={<DataTable />} />
-              <Route path="settings" element={<Settings />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
+        <TikTokAuthProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* TikTok OAuth コールバック用ルート */}
+              <Route 
+                path="/auth/tiktok/callback" 
+                element={
+                  <PrivateRoute>
+                    <TikTokCallback />
+                  </PrivateRoute>
+                } 
+              />
+              
+              {/* メインアプリケーションルート */}
+              <Route path="/" element={
+                <PrivateRoute>
+                  <Layout />
+                </PrivateRoute>
+              }>
+                <Route index element={<Dashboard />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="competitor" element={<CompetitorAnalysis />} />
+                <Route path="ai-report" element={<AIReport />} />
+                <Route path="data-table" element={<DataTable />} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </TikTokAuthProvider>
       </AuthProvider>
     </ThemeProvider>
   );
