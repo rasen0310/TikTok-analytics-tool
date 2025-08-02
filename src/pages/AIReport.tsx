@@ -284,10 +284,6 @@ export const AIReport: React.FC = () => {
     }
   };
 
-  const formatDateRange = (period: PeriodData) => {
-    return `${dayjs(period.startDate).format('YYYY/MM/DD')} - ${dayjs(period.endDate).format('YYYY/MM/DD')}`;
-  };
-
   const handleGenerateReport = () => {
     setIsLoading(true);
     setShowReport(false);
