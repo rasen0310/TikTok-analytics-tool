@@ -8,6 +8,7 @@ import { Dashboard } from './pages/Dashboard';
 import { CompetitorAnalysis } from './pages/CompetitorAnalysis';
 import { AIReport } from './pages/AIReport';
 import { Settings } from './pages/Settings';
+import { DataTable } from './pages/DataTable';
 import { Login } from './pages/Login';
 
 const theme = createTheme({
@@ -76,6 +77,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="competitor" element={<CompetitorAnalysis />} />
               <Route path="ai-report" element={<AIReport />} />
+              <Route path="data-table" element={<DataTable />} />
               <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>

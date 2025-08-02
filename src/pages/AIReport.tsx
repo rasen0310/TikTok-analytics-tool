@@ -13,6 +13,7 @@ import {
   Avatar,
   Button,
   ButtonGroup,
+  CircularProgress,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -33,6 +34,7 @@ import {
   AccessTime,
   CalendarToday,
   DateRange,
+  Assessment,
 } from '@mui/icons-material';
 
 interface PeriodData {
@@ -49,6 +51,8 @@ export const AIReport: React.FC = () => {
   const [period2Start, setPeriod2Start] = React.useState<Dayjs | null>(dayjs().subtract(7, 'day'));
   const [period2End, setPeriod2End] = React.useState<Dayjs | null>(dayjs());
   const [selectedPreset, setSelectedPreset] = React.useState<string>('custom');
+  const [showReport, setShowReport] = React.useState<boolean>(false);
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
   const getPeriodData = (startDate: Dayjs | null, endDate: Dayjs | null): PeriodData | null => {
     if (!startDate || !endDate) return null;
@@ -280,22 +284,16 @@ export const AIReport: React.FC = () => {
     }
   };
 
-  const formatDateRange = (period: PeriodData) => {
-    return `${dayjs(period.startDate).format('YYYY/MM/DD')} - ${dayjs(period.endDate).format('YYYY/MM/DD')}`;
-  };
-
-  const getComparisonTitle = () => {
-    if (!period1 || !period2) return '';
+  const handleGenerateReport = () => {
+    setIsLoading(true);
+    setShowReport(false);
     
-    if (selectedPreset === 'weekly') {
-      return '週次比較レポート: 先週 vs 今週';
-    } else if (selectedPreset === 'monthly') {
-      return '月次比較レポート: 先月 vs 今月';
-    } else {
-      return `カスタム比較レポート: ${formatDateRange(period1)} vs ${formatDateRange(period2)}`;
-    }
+    // 2秒間のローディング時間を設定
+    setTimeout(() => {
+      setIsLoading(false);
+      setShowReport(true);
+    }, 2000);
   };
-
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -305,40 +303,6 @@ export const AIReport: React.FC = () => {
             AIレポート - 期間比較分析
           </Typography>
           
-          {period1 && period2 && (
-            <Paper sx={{ 
-              p: 3, 
-              mb: 4, 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              textAlign: 'center'
-            }}>
-              <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-                📊 {getComparisonTitle()}
-              </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 4, flexWrap: 'wrap' }}>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
-                    {formatPeriodLabel(true)}
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {formatDateRange(period1)}
-                  </Typography>
-                </Box>
-                <Typography variant="h6" sx={{ alignSelf: 'center', mx: 2 }}>
-                  VS
-                </Typography>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
-                    {formatPeriodLabel(false)}
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {formatDateRange(period2)}
-                  </Typography>
-                </Box>
-              </Box>
-            </Paper>
-          )}
 
           <Paper sx={{ p: 3, mb: 4 }}>
             <Typography variant="h6" gutterBottom>期間選択</Typography>
@@ -412,8 +376,8 @@ export const AIReport: React.FC = () => {
 
             {/* カスタム期間選択 */}
             {selectedPreset === 'custom' && (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                <Box sx={{ flex: '1 1 auto', minWidth: '300px' }}>
+              <Stack spacing={3}>
+                <Box>
                   <Typography variant="subtitle1" gutterBottom>期間1</Typography>
                   <Stack direction="row" spacing={2}>
                     <DatePicker
@@ -430,7 +394,7 @@ export const AIReport: React.FC = () => {
                     />
                   </Stack>
                 </Box>
-                <Box sx={{ flex: '1 1 auto', minWidth: '300px' }}>
+                <Box>
                   <Typography variant="subtitle1" gutterBottom>期間2</Typography>
                   <Stack direction="row" spacing={2}>
                     <DatePicker
@@ -447,11 +411,67 @@ export const AIReport: React.FC = () => {
                     />
                   </Stack>
                 </Box>
-              </Box>
+              </Stack>
             )}
+            
+            {/* レポート出力ボタン */}
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleGenerateReport}
+                disabled={!period1 || !period2 || isLoading}
+                startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <Assessment />}
+                sx={{
+                  backgroundColor: '#FE2C55',
+                  color: 'white',
+                  px: 4,
+                  py: 1.5,
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold',
+                  '&:hover': {
+                    backgroundColor: '#E01E45',
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'grey.400',
+                  },
+                }}
+              >
+                {isLoading ? 'レポート生成中...' : 'レポートを出力'}
+              </Button>
+            </Box>
           </Paper>
 
-          {period1 && period2 ? (
+          {/* ローディングアニメーション */}
+          {isLoading && (
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center', 
+              justifyContent: 'center',
+              py: 8,
+              gap: 3
+            }}>
+              <CircularProgress 
+                size={80} 
+                thickness={4}
+                sx={{ 
+                  color: '#FE2C55',
+                  '& .MuiCircularProgress-circle': {
+                    strokeLinecap: 'round',
+                  },
+                }}
+              />
+              <Typography variant="h6" color="textSecondary">
+                AIがレポートを生成しています...
+              </Typography>
+              <Typography variant="body2" color="textSecondary" sx={{ maxWidth: 400, textAlign: 'center' }}>
+                選択された期間のデータを分析し、詳細なレポートを作成しています。
+              </Typography>
+            </Box>
+          )}
+
+          {period1 && period2 && showReport && !isLoading ? (
             <>
               <Paper sx={{ p: 3, mb: 4, bgcolor: 'grey.500', color: 'white' }}>
                 <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
@@ -516,26 +536,42 @@ export const AIReport: React.FC = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                            },
                             scales: {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            interaction: {
+                              intersect: false,
+                              mode: 'index' as const
+                            },
+                            onHover: () => {},
                             animation: {
                               duration: 1000,
-                              onComplete: function(context) {
+                              onComplete: function(context: any) {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
-                                ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = '#333';
+                                ctx.save();
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.fillStyle = 'black';
                                 ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
-                                chart.data.datasets[0].data.forEach((value, index) => {
+                                ctx.textBaseline = 'middle';
+                                
+                                chart.data.datasets[0].data.forEach((value: number, index: number) => {
                                   const meta = chart.getDatasetMeta(0);
-                                  const bar = meta.data[index];
-                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                  const bar = meta.data[index] as any;
+                                  if (bar && bar.x !== undefined && bar.y !== undefined && bar.base !== undefined) {
+                                    const formattedValue = new Intl.NumberFormat('ja-JP').format(value);
+                                    const yPos = bar.y + (bar.base - bar.y) / 2;
+                                    ctx.fillText(formattedValue, bar.x, yPos);
+                                  }
                                 });
+                                
+                                ctx.restore();
                               }
                             }
                           }}
@@ -562,26 +598,42 @@ export const AIReport: React.FC = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                            },
                             scales: {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            interaction: {
+                              intersect: false,
+                              mode: 'index' as const
+                            },
+                            onHover: () => {},
                             animation: {
                               duration: 1000,
-                              onComplete: function(context) {
+                              onComplete: function(context: any) {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
-                                ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = '#333';
+                                ctx.save();
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.fillStyle = 'black';
                                 ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
-                                chart.data.datasets[0].data.forEach((value, index) => {
+                                ctx.textBaseline = 'middle';
+                                
+                                chart.data.datasets[0].data.forEach((value: number, index: number) => {
                                   const meta = chart.getDatasetMeta(0);
-                                  const bar = meta.data[index];
-                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                  const bar = meta.data[index] as any;
+                                  if (bar && bar.x !== undefined && bar.y !== undefined && bar.base !== undefined) {
+                                    const formattedValue = new Intl.NumberFormat('ja-JP').format(value);
+                                    const yPos = bar.y + (bar.base - bar.y) / 2;
+                                    ctx.fillText(formattedValue, bar.x, yPos);
+                                  }
                                 });
+                                
+                                ctx.restore();
                               }
                             }
                           }}
@@ -608,26 +660,42 @@ export const AIReport: React.FC = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                            },
                             scales: {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            interaction: {
+                              intersect: false,
+                              mode: 'index' as const
+                            },
+                            onHover: () => {},
                             animation: {
                               duration: 1000,
-                              onComplete: function(context) {
+                              onComplete: function(context: any) {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
-                                ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = '#333';
+                                ctx.save();
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.fillStyle = 'black';
                                 ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
-                                chart.data.datasets[0].data.forEach((value, index) => {
+                                ctx.textBaseline = 'middle';
+                                
+                                chart.data.datasets[0].data.forEach((value: number, index: number) => {
                                   const meta = chart.getDatasetMeta(0);
-                                  const bar = meta.data[index];
-                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                  const bar = meta.data[index] as any;
+                                  if (bar && bar.x !== undefined && bar.y !== undefined && bar.base !== undefined) {
+                                    const formattedValue = new Intl.NumberFormat('ja-JP').format(value);
+                                    const yPos = bar.y + (bar.base - bar.y) / 2;
+                                    ctx.fillText(formattedValue, bar.x, yPos);
+                                  }
                                 });
+                                
+                                ctx.restore();
                               }
                             }
                           }}
@@ -654,26 +722,42 @@ export const AIReport: React.FC = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                            },
                             scales: {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            interaction: {
+                              intersect: false,
+                              mode: 'index' as const
+                            },
+                            onHover: () => {},
                             animation: {
                               duration: 1000,
-                              onComplete: function(context) {
+                              onComplete: function(context: any) {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
-                                ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = '#333';
+                                ctx.save();
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.fillStyle = 'black';
                                 ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
-                                chart.data.datasets[0].data.forEach((value, index) => {
+                                ctx.textBaseline = 'middle';
+                                
+                                chart.data.datasets[0].data.forEach((value: number, index: number) => {
                                   const meta = chart.getDatasetMeta(0);
-                                  const bar = meta.data[index];
-                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                  const bar = meta.data[index] as any;
+                                  if (bar && bar.x !== undefined && bar.y !== undefined && bar.base !== undefined) {
+                                    const formattedValue = new Intl.NumberFormat('ja-JP').format(value);
+                                    const yPos = bar.y + (bar.base - bar.y) / 2;
+                                    ctx.fillText(formattedValue, bar.x, yPos);
+                                  }
                                 });
+                                
+                                ctx.restore();
                               }
                             }
                           }}
@@ -700,26 +784,42 @@ export const AIReport: React.FC = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                            },
                             scales: {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            interaction: {
+                              intersect: false,
+                              mode: 'index' as const
+                            },
+                            onHover: () => {},
                             animation: {
                               duration: 1000,
-                              onComplete: function(context) {
+                              onComplete: function(context: any) {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
-                                ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = '#333';
+                                ctx.save();
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.fillStyle = 'black';
                                 ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
-                                chart.data.datasets[0].data.forEach((value, index) => {
+                                ctx.textBaseline = 'middle';
+                                
+                                chart.data.datasets[0].data.forEach((value: number, index: number) => {
                                   const meta = chart.getDatasetMeta(0);
-                                  const bar = meta.data[index];
-                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                  const bar = meta.data[index] as any;
+                                  if (bar && bar.x !== undefined && bar.y !== undefined && bar.base !== undefined) {
+                                    const formattedValue = new Intl.NumberFormat('ja-JP').format(value);
+                                    const yPos = bar.y + (bar.base - bar.y) / 2;
+                                    ctx.fillText(formattedValue, bar.x, yPos);
+                                  }
                                 });
+                                
+                                ctx.restore();
                               }
                             }
                           }}
@@ -746,26 +846,42 @@ export const AIReport: React.FC = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                              legend: { display: false },
+                              tooltip: { enabled: false }
+                            },
                             scales: {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            interaction: {
+                              intersect: false,
+                              mode: 'index' as const
+                            },
+                            onHover: () => {},
                             animation: {
                               duration: 1000,
-                              onComplete: function(context) {
+                              onComplete: function(context: any) {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
-                                ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = '#333';
+                                ctx.save();
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.fillStyle = 'black';
                                 ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
-                                chart.data.datasets[0].data.forEach((value, index) => {
+                                ctx.textBaseline = 'middle';
+                                
+                                chart.data.datasets[0].data.forEach((value: number, index: number) => {
                                   const meta = chart.getDatasetMeta(0);
-                                  const bar = meta.data[index];
-                                  const formattedValue = `${(value as number).toFixed(1)}秒`;
-                                  ctx.fillText(formattedValue, bar.x, bar.y - 5);
+                                  const bar = meta.data[index] as any;
+                                  if (bar && bar.x !== undefined && bar.y !== undefined && bar.base !== undefined) {
+                                    const formattedValue = `${value.toFixed(1)}秒`;
+                                    const yPos = bar.y + (bar.base - bar.y) / 2;
+                                    ctx.fillText(formattedValue, bar.x, yPos);
+                                  }
                                 });
+                                
+                                ctx.restore();
                               }
                             }
                           }}
@@ -941,10 +1057,18 @@ export const AIReport: React.FC = () => {
               </Paper>
             </>
           ) : (
-            <Alert severity="info">
+            !isLoading && !showReport && period1 && period2 && (
+              <Alert severity="info">
+                期間を選択後、「レポートを出力」ボタンをクリックしてください。
+              </Alert>
+            )
+          )}
+          
+          {!period1 || !period2 ? (
+            <Alert severity="warning">
               比較する2つの期間を選択してください。
             </Alert>
-          )}
+          ) : null}
         </Box>
       </Container>
     </LocalizationProvider>

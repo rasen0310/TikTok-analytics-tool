@@ -15,6 +15,7 @@ import {
   Visibility,
   VisibilityOff,
   Login as LoginIcon,
+  ContentCopy,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -25,6 +26,7 @@ export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [copySuccess, setCopySuccess] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -60,6 +62,16 @@ export const Login: React.FC = () => {
   const handleDemoLogin = () => {
     setEmail('admin@tiktok-analytics.com');
     setPassword('admin123');
+  };
+
+  const handleCopy = async (text: string, type: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopySuccess(`${type}をコピーしました`);
+      setTimeout(() => setCopySuccess(''), 2000);
+    } catch (err) {
+      console.error('コピーに失敗しました:', err);
+    }
   };
 
   return (
@@ -173,11 +185,43 @@ export const Login: React.FC = () => {
           </form>
 
           <Box sx={{ mt: 4, p: 2, backgroundColor: 'rgba(254, 44, 85, 0.04)', borderRadius: 1 }}>
-            <Typography variant="body2" color="textSecondary" align="center">
-              <strong>デモアカウント:</strong><br />
-              メール: admin@tiktok-analytics.com<br />
-              パスワード: admin123
+            <Typography variant="body2" color="textSecondary" align="center" sx={{ mb: 2 }}>
+              <strong>デモアカウント:</strong>
             </Typography>
+            
+            <Stack spacing={1}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1, bgcolor: 'white', borderRadius: 1 }}>
+                <Typography variant="body2" sx={{ flex: 1 }}>
+                  <strong>メール:</strong> admin@tiktok-analytics.com
+                </Typography>
+                <IconButton 
+                  size="small" 
+                  onClick={() => handleCopy('admin@tiktok-analytics.com', 'メールアドレス')}
+                  sx={{ ml: 1, color: '#FE2C55' }}
+                >
+                  <ContentCopy fontSize="small" />
+                </IconButton>
+              </Box>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1, bgcolor: 'white', borderRadius: 1 }}>
+                <Typography variant="body2" sx={{ flex: 1 }}>
+                  <strong>パスワード:</strong> admin123
+                </Typography>
+                <IconButton 
+                  size="small" 
+                  onClick={() => handleCopy('admin123', 'パスワード')}
+                  sx={{ ml: 1, color: '#FE2C55' }}
+                >
+                  <ContentCopy fontSize="small" />
+                </IconButton>
+              </Box>
+              
+              {copySuccess && (
+                <Typography variant="caption" color="success.main" align="center">
+                  {copySuccess}
+                </Typography>
+              )}
+            </Stack>
           </Box>
         </Paper>
       </Box>
