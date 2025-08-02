@@ -541,23 +541,30 @@ export const AIReport: React.FC = () => {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            plugins: { legend: { display: false } },
                             animation: {
                               duration: 1000,
-                              onComplete: function(context) {
+                              onComplete: function(context: any) {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
-                                ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = 'white';
+                                ctx.save();
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.fillStyle = 'black';
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
-                                chart.data.datasets[0].data.forEach((value, index) => {
+                                
+                                chart.data.datasets[0].data.forEach((value: number, index: number) => {
                                   const meta = chart.getDatasetMeta(0);
                                   const bar = meta.data[index] as any;
-                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  const barHeight = bar.y - bar.base;
-                                  const yPos = bar.y + (barHeight / 2);
-                                  ctx.fillText(formattedValue, bar.x, yPos);
+                                  if (bar && bar.x !== undefined && bar.y !== undefined && bar.base !== undefined) {
+                                    const formattedValue = new Intl.NumberFormat('ja-JP').format(value);
+                                    const yPos = bar.y + (bar.base - bar.y) / 2;
+                                    ctx.fillText(formattedValue, bar.x, yPos);
+                                  }
                                 });
+                                
+                                ctx.restore();
                               }
                             }
                           }}
@@ -589,23 +596,30 @@ export const AIReport: React.FC = () => {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            plugins: { legend: { display: false } },
                             animation: {
                               duration: 1000,
-                              onComplete: function(context) {
+                              onComplete: function(context: any) {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
-                                ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = 'white';
+                                ctx.save();
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.fillStyle = 'black';
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
-                                chart.data.datasets[0].data.forEach((value, index) => {
+                                
+                                chart.data.datasets[0].data.forEach((value: number, index: number) => {
                                   const meta = chart.getDatasetMeta(0);
                                   const bar = meta.data[index] as any;
-                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  const barHeight = bar.y - bar.base;
-                                  const yPos = bar.y + (barHeight / 2);
-                                  ctx.fillText(formattedValue, bar.x, yPos);
+                                  if (bar && bar.x !== undefined && bar.y !== undefined && bar.base !== undefined) {
+                                    const formattedValue = new Intl.NumberFormat('ja-JP').format(value);
+                                    const yPos = bar.y + (bar.base - bar.y) / 2;
+                                    ctx.fillText(formattedValue, bar.x, yPos);
+                                  }
                                 });
+                                
+                                ctx.restore();
                               }
                             }
                           }}
@@ -637,23 +651,30 @@ export const AIReport: React.FC = () => {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            plugins: { legend: { display: false } },
                             animation: {
                               duration: 1000,
-                              onComplete: function(context) {
+                              onComplete: function(context: any) {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
-                                ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = 'white';
+                                ctx.save();
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.fillStyle = 'black';
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
-                                chart.data.datasets[0].data.forEach((value, index) => {
+                                
+                                chart.data.datasets[0].data.forEach((value: number, index: number) => {
                                   const meta = chart.getDatasetMeta(0);
                                   const bar = meta.data[index] as any;
-                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  const barHeight = bar.y - bar.base;
-                                  const yPos = bar.y + (barHeight / 2);
-                                  ctx.fillText(formattedValue, bar.x, yPos);
+                                  if (bar && bar.x !== undefined && bar.y !== undefined && bar.base !== undefined) {
+                                    const formattedValue = new Intl.NumberFormat('ja-JP').format(value);
+                                    const yPos = bar.y + (bar.base - bar.y) / 2;
+                                    ctx.fillText(formattedValue, bar.x, yPos);
+                                  }
                                 });
+                                
+                                ctx.restore();
                               }
                             }
                           }}
@@ -685,23 +706,30 @@ export const AIReport: React.FC = () => {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            plugins: { legend: { display: false } },
                             animation: {
                               duration: 1000,
-                              onComplete: function(context) {
+                              onComplete: function(context: any) {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
-                                ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = 'white';
+                                ctx.save();
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.fillStyle = 'black';
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
-                                chart.data.datasets[0].data.forEach((value, index) => {
+                                
+                                chart.data.datasets[0].data.forEach((value: number, index: number) => {
                                   const meta = chart.getDatasetMeta(0);
                                   const bar = meta.data[index] as any;
-                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  const barHeight = bar.y - bar.base;
-                                  const yPos = bar.y + (barHeight / 2);
-                                  ctx.fillText(formattedValue, bar.x, yPos);
+                                  if (bar && bar.x !== undefined && bar.y !== undefined && bar.base !== undefined) {
+                                    const formattedValue = new Intl.NumberFormat('ja-JP').format(value);
+                                    const yPos = bar.y + (bar.base - bar.y) / 2;
+                                    ctx.fillText(formattedValue, bar.x, yPos);
+                                  }
                                 });
+                                
+                                ctx.restore();
                               }
                             }
                           }}
@@ -733,23 +761,30 @@ export const AIReport: React.FC = () => {
                               y: { display: false, beginAtZero: true },
                               x: { grid: { display: false } }
                             },
+                            plugins: { legend: { display: false } },
                             animation: {
                               duration: 1000,
-                              onComplete: function(context) {
+                              onComplete: function(context: any) {
                                 const chart = context.chart;
                                 const ctx = chart.ctx;
-                                ctx.font = 'bold 11px Arial';
-                                ctx.fillStyle = 'white';
+                                ctx.save();
+                                ctx.globalCompositeOperation = 'source-over';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.fillStyle = 'black';
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
-                                chart.data.datasets[0].data.forEach((value, index) => {
+                                
+                                chart.data.datasets[0].data.forEach((value: number, index: number) => {
                                   const meta = chart.getDatasetMeta(0);
                                   const bar = meta.data[index] as any;
-                                  const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
-                                  const barHeight = bar.y - bar.base;
-                                  const yPos = bar.y + (barHeight / 2);
-                                  ctx.fillText(formattedValue, bar.x, yPos);
+                                  if (bar && bar.x !== undefined && bar.y !== undefined && bar.base !== undefined) {
+                                    const formattedValue = new Intl.NumberFormat('ja-JP').format(value);
+                                    const yPos = bar.y + (bar.base - bar.y) / 2;
+                                    ctx.fillText(formattedValue, bar.x, yPos);
+                                  }
                                 });
+                                
+                                ctx.restore();
                               }
                             }
                           }}
