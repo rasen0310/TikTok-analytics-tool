@@ -288,18 +288,6 @@ export const AIReport: React.FC = () => {
     return `${dayjs(period.startDate).format('YYYY/MM/DD')} - ${dayjs(period.endDate).format('YYYY/MM/DD')}`;
   };
 
-  const getComparisonTitle = () => {
-    if (!period1 || !period2) return '';
-    
-    if (selectedPreset === 'weekly') {
-      return '週次比較レポート: 先週 vs 今週';
-    } else if (selectedPreset === 'monthly') {
-      return '月次比較レポート: 先月 vs 今月';
-    } else {
-      return `カスタム比較レポート: ${formatDateRange(period1)} vs ${formatDateRange(period2)}`;
-    }
-  };
-
   const handleGenerateReport = () => {
     setIsLoading(true);
     setShowReport(false);
@@ -568,7 +556,7 @@ export const AIReport: React.FC = () => {
                                 ctx.textBaseline = 'middle';
                                 chart.data.datasets[0].data.forEach((value, index) => {
                                   const meta = chart.getDatasetMeta(0);
-                                  const bar = meta.data[index];
+                                  const bar = meta.data[index] as any;
                                   const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
                                   const barHeight = bar.y - bar.base;
                                   const yPos = bar.y + (barHeight / 2);
@@ -616,7 +604,7 @@ export const AIReport: React.FC = () => {
                                 ctx.textBaseline = 'middle';
                                 chart.data.datasets[0].data.forEach((value, index) => {
                                   const meta = chart.getDatasetMeta(0);
-                                  const bar = meta.data[index];
+                                  const bar = meta.data[index] as any;
                                   const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
                                   const barHeight = bar.y - bar.base;
                                   const yPos = bar.y + (barHeight / 2);
@@ -664,7 +652,7 @@ export const AIReport: React.FC = () => {
                                 ctx.textBaseline = 'middle';
                                 chart.data.datasets[0].data.forEach((value, index) => {
                                   const meta = chart.getDatasetMeta(0);
-                                  const bar = meta.data[index];
+                                  const bar = meta.data[index] as any;
                                   const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
                                   const barHeight = bar.y - bar.base;
                                   const yPos = bar.y + (barHeight / 2);
@@ -712,7 +700,7 @@ export const AIReport: React.FC = () => {
                                 ctx.textBaseline = 'middle';
                                 chart.data.datasets[0].data.forEach((value, index) => {
                                   const meta = chart.getDatasetMeta(0);
-                                  const bar = meta.data[index];
+                                  const bar = meta.data[index] as any;
                                   const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
                                   const barHeight = bar.y - bar.base;
                                   const yPos = bar.y + (barHeight / 2);
@@ -760,7 +748,7 @@ export const AIReport: React.FC = () => {
                                 ctx.textBaseline = 'middle';
                                 chart.data.datasets[0].data.forEach((value, index) => {
                                   const meta = chart.getDatasetMeta(0);
-                                  const bar = meta.data[index];
+                                  const bar = meta.data[index] as any;
                                   const formattedValue = new Intl.NumberFormat('ja-JP').format(value as number);
                                   const barHeight = bar.y - bar.base;
                                   const yPos = bar.y + (barHeight / 2);
