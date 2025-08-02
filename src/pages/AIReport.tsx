@@ -13,6 +13,7 @@ import {
   Avatar,
   Button,
   ButtonGroup,
+  CircularProgress,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -33,6 +34,7 @@ import {
   AccessTime,
   CalendarToday,
   DateRange,
+  Assessment,
 } from '@mui/icons-material';
 
 interface PeriodData {
@@ -49,6 +51,8 @@ export const AIReport: React.FC = () => {
   const [period2Start, setPeriod2Start] = React.useState<Dayjs | null>(dayjs().subtract(7, 'day'));
   const [period2End, setPeriod2End] = React.useState<Dayjs | null>(dayjs());
   const [selectedPreset, setSelectedPreset] = React.useState<string>('custom');
+  const [showReport, setShowReport] = React.useState<boolean>(false);
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
   const getPeriodData = (startDate: Dayjs | null, endDate: Dayjs | null): PeriodData | null => {
     if (!startDate || !endDate) return null;
@@ -296,6 +300,16 @@ export const AIReport: React.FC = () => {
     }
   };
 
+  const handleGenerateReport = () => {
+    setIsLoading(true);
+    setShowReport(false);
+    
+    // 2秒間のローディング時間を設定
+    setTimeout(() => {
+      setIsLoading(false);
+      setShowReport(true);
+    }, 2000);
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -449,9 +463,65 @@ export const AIReport: React.FC = () => {
                 </Box>
               </Box>
             )}
+            
+            {/* レポート出力ボタン */}
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleGenerateReport}
+                disabled={!period1 || !period2 || isLoading}
+                startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <Assessment />}
+                sx={{
+                  backgroundColor: '#FE2C55',
+                  color: 'white',
+                  px: 4,
+                  py: 1.5,
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold',
+                  '&:hover': {
+                    backgroundColor: '#E01E45',
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'grey.400',
+                  },
+                }}
+              >
+                {isLoading ? 'レポート生成中...' : 'レポートを出力'}
+              </Button>
+            </Box>
           </Paper>
 
-          {period1 && period2 ? (
+          {/* ローディングアニメーション */}
+          {isLoading && (
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center', 
+              justifyContent: 'center',
+              py: 8,
+              gap: 3
+            }}>
+              <CircularProgress 
+                size={80} 
+                thickness={4}
+                sx={{ 
+                  color: '#FE2C55',
+                  '& .MuiCircularProgress-circle': {
+                    strokeLinecap: 'round',
+                  },
+                }}
+              />
+              <Typography variant="h6" color="textSecondary">
+                AIがレポートを生成しています...
+              </Typography>
+              <Typography variant="body2" color="textSecondary" sx={{ maxWidth: 400, textAlign: 'center' }}>
+                選択された期間のデータを分析し、詳細なレポートを作成しています。
+              </Typography>
+            </Box>
+          )}
+
+          {period1 && period2 && showReport && !isLoading ? (
             <>
               <Paper sx={{ p: 3, mb: 4, bgcolor: 'primary.main', color: 'white' }}>
                 <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
@@ -941,10 +1011,18 @@ export const AIReport: React.FC = () => {
               </Paper>
             </>
           ) : (
-            <Alert severity="info">
+            !isLoading && !showReport && period1 && period2 && (
+              <Alert severity="info">
+                期間を選択後、「レポートを出力」ボタンをクリックしてください。
+              </Alert>
+            )
+          )}
+          
+          {!period1 || !period2 ? (
+            <Alert severity="warning">
               比較する2つの期間を選択してください。
             </Alert>
-          )}
+          ) : null}
         </Box>
       </Container>
     </LocalizationProvider>
