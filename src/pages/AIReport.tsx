@@ -319,7 +319,7 @@ export const AIReport: React.FC = () => {
             AIレポート - 期間比較分析
           </Typography>
           
-          {period1 && period2 && (
+          {period1 && period2 && showReport && (
             <Paper sx={{ 
               p: 3, 
               mb: 4, 
