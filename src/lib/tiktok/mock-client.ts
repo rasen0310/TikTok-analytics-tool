@@ -31,7 +31,7 @@ export class TikTokMockClient implements ITikTokClient {
     return {
       user_id: 'mock_user_12345',
       username: 'demo_tiktok_user',
-      display_name: 'デモTikTokユーザー',
+      display_name: 'サンプルTikTokユーザー',
       avatar_url: 'https://via.placeholder.com/150',
       follower_count: Math.floor(Math.random() * 100000) + 10000,
       following_count: Math.floor(Math.random() * 1000) + 100,
@@ -69,8 +69,8 @@ export class TikTokMockClient implements ITikTokClient {
 
       videos.push({
         video_id: `mock_video_${i + 1}_${Date.now()}`,
-        title: `デモ動画 ${i + 1}`,
-        description: `これはデモ用のサンプル動画です。実際のTikTok APIに接続すると本物のデータが表示されます。`,
+        title: `サンプル動画 ${i + 1}`,
+        description: `これはサンプル用のモック動画です。実際のTikTok APIに接続すると本物のデータが表示されます。`,
         duration: [15, 30, 45, 60, 90][Math.floor(Math.random() * 5)],
         cover_image_url: `https://via.placeholder.com/300x400?text=Video+${i + 1}`,
         video_url: `https://www.tiktok.com/@demo_user/video/mock_${i + 1}`,
