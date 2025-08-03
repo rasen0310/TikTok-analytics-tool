@@ -20,6 +20,7 @@ import {
   Analytics as AnalyticsIcon,
   Assessment as AssessmentIcon,
   Menu as MenuIcon,
+  Settings as SettingsIcon,
   Logout as LogoutIcon,
   TableChart as TableChartIcon,
 } from '@mui/icons-material';
@@ -105,6 +106,46 @@ export const Layout: React.FC = () => {
       
       <Box sx={{ flexGrow: 1 }} />
       
+      <Box sx={{ borderTop: '1px solid rgba(0, 0, 0, 0.12)', pb: 2 }}>
+        <List>
+          <ListItem disablePadding>
+            <ListItemButton
+              selected={location.pathname === '/settings'}
+              onClick={() => {
+                navigate('/settings');
+                if (isMobile) {
+                  setMobileOpen(false);
+                }
+              }}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: 'rgba(254, 44, 85, 0.08)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(254, 44, 85, 0.12)',
+                  },
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  color: location.pathname === '/settings' ? '#FE2C55' : 'inherit',
+                }}
+              >
+                <SettingsIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="設定"
+                sx={{
+                  '& .MuiListItemText-primary': {
+                    fontWeight: location.pathname === '/settings' ? 600 : 400,
+                    color: location.pathname === '/settings' ? '#FE2C55' : 'inherit',
+                  },
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      </Box>
     </Box>
   );
 
@@ -142,7 +183,9 @@ export const Layout: React.FC = () => {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            {location.pathname === '/data-table'
+            {location.pathname === '/settings' 
+              ? '設定' 
+              : location.pathname === '/data-table'
               ? '読み込みデータ'
               : menuItems.find(item => item.path === location.pathname)?.text || 'TikTok Analytics'}
           </Typography>
