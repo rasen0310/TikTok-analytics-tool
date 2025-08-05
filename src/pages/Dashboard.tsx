@@ -17,7 +17,10 @@ export const Dashboard: React.FC = () => {
     isConfigured
   } = useTikTokData();
 
+  const [currentDateRange, setCurrentDateRange] = React.useState<{ startDate: string; endDate: string } | null>(null);
+
   const handleDateRangeChange = (startDate: string, endDate: string) => {
+    setCurrentDateRange({ startDate, endDate });
     fetchData(startDate, endDate);
   };
 
@@ -70,12 +73,14 @@ export const Dashboard: React.FC = () => {
         ) : (
           <>
             {summary && <SummaryCards summary={summary} />}
-            {videos.length > 0 && (
-              <>
-                <AnalyticsChart videos={videos} />
-                <VideoTable videos={videos} />
-              </>
+            {currentDateRange && (
+              <AnalyticsChart videos={videos} dateRange={currentDateRange} />
             )}
+            <VideoTable 
+              videos={videos} 
+              loading={loading}
+              onRefresh={() => currentDateRange && fetchData(currentDateRange.startDate, currentDateRange.endDate)}
+            />
             {!loading && videos.length === 0 && !error && (
               <Alert severity="info" sx={{ mt: 2 }}>
                 選択された期間にデータがありません。日付範囲を調整してください。
