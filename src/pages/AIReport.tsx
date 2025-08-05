@@ -473,7 +473,7 @@ export const AIReport: React.FC = () => {
 
           {period1 && period2 && showReport && !isLoading ? (
             <>
-              <Paper sx={{ p: 3, mb: 4, bgcolor: 'primary.main', color: 'white' }}>
+              <Paper sx={{ p: 3, mb: 4, bgcolor: 'grey.500', color: 'white' }}>
                 <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
                   📊 パフォーマンス比較分析
                 </Typography>
