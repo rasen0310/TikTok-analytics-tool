@@ -13,6 +13,7 @@ import {
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
 import type { TikTokVideo } from '../types';
+import dayjs from 'dayjs';
 
 ChartJS.register(
   CategoryScale,
@@ -27,11 +28,12 @@ ChartJS.register(
 
 interface AnalyticsChartProps {
   videos: TikTokVideo[];
+  dateRange?: { startDate: string; endDate: string };
 }
 
 type ChartType = 'views' | 'likes' | 'comments' | 'shares' | 'followers' | 'watchTime' | 'duration' | 'engagement';
 
-export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
+export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos, dateRange }) => {
   const [chartType, setChartType] = React.useState<ChartType>('views');
 
   const handleChartTypeChange = (
@@ -43,9 +45,49 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
     }
   };
 
-  const labels = videos.map(video => video.postDate);
+  // 期間内の全ての日付を生成し、データがない日は0で表示
+  const generateLabelsAndData = () => {
+    if (!dateRange) {
+      // dateRangeが提供されない場合は従来の方法を使用
+      return {
+        labels: videos.map(video => video.postDate),
+        videosByDate: videos.reduce((acc, video) => {
+          acc[video.postDate] = video;
+          return acc;
+        }, {} as Record<string, TikTokVideo>)
+      };
+    }
+
+    const { startDate, endDate } = dateRange;
+    const labels: string[] = [];
+    const start = dayjs(startDate);
+    const end = dayjs(endDate);
+    
+    // 全ての日付を生成
+    let current = start;
+    while (current.isBefore(end) || current.isSame(end, 'day')) {
+      labels.push(current.format('YYYY-MM-DD'));
+      current = current.add(1, 'day');
+    }
+
+    // 日付ごとにビデオデータをマッピング
+    const videosByDate = videos.reduce((acc, video) => {
+      acc[video.postDate] = video;
+      return acc;
+    }, {} as Record<string, TikTokVideo>);
+
+    return { labels, videosByDate };
+  };
+
+  const { labels, videosByDate } = generateLabelsAndData();
 
   const getChartData = () => {
+    // 各日付のデータを取得する関数
+    const getDataForDate = (date: string, field: keyof TikTokVideo): number => {
+      const video = videosByDate[date];
+      return video ? (video[field] as number) : 0;
+    };
+
     switch (chartType) {
       case 'views':
         return {
@@ -53,7 +95,7 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
           datasets: [
             {
               label: '再生回数',
-              data: videos.map(video => video.views),
+              data: labels.map(date => getDataForDate(date, 'views')),
               borderColor: 'rgb(255, 99, 132)',
               backgroundColor: 'rgba(255, 99, 132, 0.2)',
               tension: 0.1,
@@ -66,7 +108,7 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
           datasets: [
             {
               label: 'いいね数',
-              data: videos.map(video => video.likes),
+              data: labels.map(date => getDataForDate(date, 'likes')),
               borderColor: 'rgb(54, 162, 235)',
               backgroundColor: 'rgba(54, 162, 235, 0.2)',
               tension: 0.1,
@@ -79,7 +121,7 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
           datasets: [
             {
               label: 'コメント数',
-              data: videos.map(video => video.comments),
+              data: labels.map(date => getDataForDate(date, 'comments')),
               borderColor: 'rgb(255, 206, 86)',
               backgroundColor: 'rgba(255, 206, 86, 0.2)',
               tension: 0.1,
@@ -92,7 +134,7 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
           datasets: [
             {
               label: 'シェア数',
-              data: videos.map(video => video.shares),
+              data: labels.map(date => getDataForDate(date, 'shares')),
               borderColor: 'rgb(75, 192, 192)',
               backgroundColor: 'rgba(75, 192, 192, 0.2)',
               tension: 0.1,
@@ -105,7 +147,7 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
           datasets: [
             {
               label: '新規フォロワー',
-              data: videos.map(video => video.newFollowers),
+              data: labels.map(date => getDataForDate(date, 'newFollowers')),
               borderColor: 'rgb(153, 102, 255)',
               backgroundColor: 'rgba(153, 102, 255, 0.2)',
               tension: 0.1,
@@ -118,7 +160,7 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
           datasets: [
             {
               label: '平均閲覧時間（秒）',
-              data: videos.map(video => video.avgWatchTime),
+              data: labels.map(date => getDataForDate(date, 'avgWatchTime')),
               borderColor: 'rgb(255, 159, 64)',
               backgroundColor: 'rgba(255, 159, 64, 0.2)',
               tension: 0.1,
@@ -131,7 +173,7 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
           datasets: [
             {
               label: '動画尺（秒）',
-              data: videos.map(video => video.duration),
+              data: labels.map(date => getDataForDate(date, 'duration')),
               borderColor: 'rgb(199, 199, 199)',
               backgroundColor: 'rgba(199, 199, 199, 0.2)',
               tension: 0.1,
@@ -144,17 +186,17 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos }) => {
           datasets: [
             {
               label: 'いいね数',
-              data: videos.map(video => video.likes),
+              data: labels.map(date => getDataForDate(date, 'likes')),
               backgroundColor: 'rgba(54, 162, 235, 0.6)',
             },
             {
               label: 'コメント数',
-              data: videos.map(video => video.comments),
+              data: labels.map(date => getDataForDate(date, 'comments')),
               backgroundColor: 'rgba(255, 206, 86, 0.6)',
             },
             {
               label: 'シェア数',
-              data: videos.map(video => video.shares),
+              data: labels.map(date => getDataForDate(date, 'shares')),
               backgroundColor: 'rgba(75, 192, 192, 0.6)',
             },
           ],

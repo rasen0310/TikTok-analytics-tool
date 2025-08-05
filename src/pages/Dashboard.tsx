@@ -17,7 +17,10 @@ export const Dashboard: React.FC = () => {
     isConfigured
   } = useTikTokData();
 
+  const [currentDateRange, setCurrentDateRange] = React.useState<{ startDate: string; endDate: string } | null>(null);
+
   const handleDateRangeChange = (startDate: string, endDate: string) => {
+    setCurrentDateRange({ startDate, endDate });
     fetchData(startDate, endDate);
   };
 
@@ -70,11 +73,11 @@ export const Dashboard: React.FC = () => {
         ) : (
           <>
             {summary && <SummaryCards summary={summary} />}
+            {currentDateRange && (
+              <AnalyticsChart videos={videos} dateRange={currentDateRange} />
+            )}
             {videos.length > 0 && (
-              <>
-                <AnalyticsChart videos={videos} />
-                <VideoTable videos={videos} />
-              </>
+              <VideoTable videos={videos} />
             )}
             {!loading && videos.length === 0 && !error && (
               <Alert severity="info" sx={{ mt: 2 }}>
