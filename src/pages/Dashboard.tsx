@@ -76,9 +76,11 @@ export const Dashboard: React.FC = () => {
             {currentDateRange && (
               <AnalyticsChart videos={videos} dateRange={currentDateRange} />
             )}
-            {videos.length > 0 && (
-              <VideoTable videos={videos} />
-            )}
+            <VideoTable 
+              videos={videos} 
+              loading={loading}
+              onRefresh={() => currentDateRange && fetchData(currentDateRange.startDate, currentDateRange.endDate)}
+            />
             {!loading && videos.length === 0 && !error && (
               <Alert severity="info" sx={{ mt: 2 }}>
                 選択された期間にデータがありません。日付範囲を調整してください。
