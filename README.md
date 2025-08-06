@@ -1,190 +1,443 @@
-# TikTok Analytics Tool
+# 🎯 TikTok分析ツール - 開発セットアップ完全ガイド
 
-TikTokの動画分析データを可視化・管理するWebアプリケーション
+## 📚 もくじ
 
-## 🚀 機能
+1. [はじめに](#-はじめに)
+2. [必要なもの](#-必要なもの)
+3. [ステップ1: プロジェクトをダウンロード](#-ステップ1-プロジェクトをダウンロード)
+4. [ステップ2: Supabaseのセットアップ](#-ステップ2-supabaseのセットアップ)
+5. [ステップ3: Google認証のセットアップ](#-ステップ3-google認証のセットアップ)
+6. [ステップ4: TikTok APIのセットアップ](#-ステップ4-tiktok-apiのセットアップ)
+7. [ステップ5: 環境変数の設定](#-ステップ5-環境変数の設定)
+8. [ステップ6: ローカルでの開発](#-ステップ6-ローカルでの開発)
+9. [ステップ7: Vercelへのデプロイ](#-ステップ7-vercelへのデプロイ)
+10. [困ったときは](#-困ったときは)
+11. [必要な情報チェックリスト](#-必要な情報チェックリスト)
 
-- **ダッシュボード**: 動画パフォーマンスの概要表示
-- **データ可視化**: 再生数、いいね数、コメント数等のグラフ表示
-- **日付範囲フィルター**: 7日、14日、21日、カスタム期間での分析
-- **ユーザー認証**: Supabaseによるセキュアな認証システム
-- **🔄 TikTok API自動切り替え**: 環境変数による開発/本番モードの自動判定
-- **📊 モックデータ**: 開発時に実際のAPIキーなしで動作
-- **TikTok OAuth**: TikTokアカウント連携（オプション）
-- **競合分析**: 競合他社の分析機能（Coming Soon）
-- **AI レポート**: AIによる分析レポート生成
+---
 
-## 🛠 技術スタック
+## 👋 はじめに
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **UI Framework**: Material-UI (MUI) v7
-- **Authentication**: Supabase Auth
-- **Database**: Supabase (PostgreSQL)
-- **Charts**: Chart.js + react-chartjs-2
-- **Routing**: React Router v6
-- **Deployment**: Vercel
+このTikTok分析ツールは、TikTokのデータを見やすく表示するWebアプリケーションです。
+このガイドでは、小学生でもわかるように、一つずつていねいに説明します。
 
-## 📋 セットアップ
+### このアプリでできること
+- 📊 TikTokの再生回数やいいねの数を見る
+- 📈 グラフで成長を確認する
+- 🤖 AIがレポートを作ってくれる
+- 👥 他の人と比較する
 
-### 1. プロジェクトのクローン
+---
 
+## 🛠 必要なもの
+
+開発を始める前に、以下のものを準備してください：
+
+### パソコンにインストールするもの
+1. **Node.js** (バージョン18以上)
+   - [ダウンロードページ](https://nodejs.org/ja/)から「LTS」と書いてあるボタンをクリック
+   - ダウンロードしたファイルをダブルクリックしてインストール
+
+2. **Git**
+   - [ダウンロードページ](https://git-scm.com/downloads)からダウンロード
+   - インストールは「Next」を押し続けるだけでOK
+
+3. **Visual Studio Code** (おすすめのエディタ)
+   - [ダウンロードページ](https://code.visualstudio.com/)からダウンロード
+
+### 無料アカウントの作成
+1. **GitHub** - コードを保存する場所
+   - [GitHub](https://github.com)で「Sign up」をクリック
+
+2. **Supabase** - データベースを使うため
+   - [Supabase](https://supabase.com)で「Start your project」をクリック
+
+3. **Vercel** - アプリを公開するため
+   - [Vercel](https://vercel.com)で「Sign Up」をクリック
+
+4. **Google Cloud** - Googleログインを使うため
+   - [Google Cloud Console](https://console.cloud.google.com/)にGoogleアカウントでログイン
+
+5. **TikTok for Developers** - TikTokのデータを取得するため
+   - [TikTok for Developers](https://developers.tiktok.com/)でアカウント作成
+
+---
+
+## 📥 ステップ1: プロジェクトをダウンロード
+
+### 1. ターミナル（黒い画面）を開く
+- **Windows**: スタートメニューで「cmd」と入力
+- **Mac**: Spotlightで「ターミナル」と検索
+
+### 2. 作業フォルダを作る
 ```bash
-git clone https://github.com/rasen0310/TikTok-analytics-tool.git
-cd TikTok-analytics-tool
-```
+# デスクトップに移動
+cd Desktop
 
-### 2. 依存関係のインストール
+# プロジェクトをコピー（URLは実際のGitHubリポジトリに変更してください）
+git clone https://github.com/your-username/tiktok-analytics-tool.git
 
-```bash
+# プロジェクトフォルダに入る
+cd tiktok-analytics-tool
+
+# 必要なファイルをインストール
 npm install
 ```
 
-### 3. 環境変数の設定
+💡 **ヒント**: コマンドは一つずつコピーして、ターミナルに貼り付けてEnterキーを押してください
 
-`.env.local` ファイルを作成し、以下を設定：
+---
 
-```env
-# Supabase設定（必須）
-VITE_SUPABASE_URL=your-supabase-url
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+## 🗄 ステップ2: Supabaseのセットアップ
 
-# TikTok API設定（オプション - 本番API使用時のみ）
-VITE_TIKTOK_CLIENT_KEY=your-tiktok-client-key
+Supabaseは、データを保存する場所です。
+
+### 1. プロジェクトを作る
+1. [Supabase](https://app.supabase.com/)にログイン
+2. 「New project」をクリック
+3. 以下を入力：
+   - **Name**: `tiktok-analytics`（好きな名前でOK）
+   - **Database Password**: 安全なパスワード（メモしておく！）
+   - **Region**: `Northeast Asia (Tokyo)`を選ぶ
+
+### 2. データベースを準備する
+1. 左のメニューから「SQL Editor」をクリック
+2. 「New query」をクリック
+3. このプロジェクトの`FINAL_DATABASE_SETUP.sql`ファイルの内容をすべてコピー
+4. エディタに貼り付けて「Run」をクリック
+
+### 3. 必要な情報をメモする
+1. 左のメニューから「Settings」→「API」をクリック
+2. 以下をメモ：
+   - **Project URL**: `https://xxxxx.supabase.co`のような形
+   - **anon public**: `eyJhbGci...`のような長い文字列
+
+---
+
+## 🔐 ステップ3: Google認証のセットアップ
+
+Googleアカウントでログインできるようにします。
+
+### 1. Google Cloud Consoleの設定
+
+#### プロジェクトを作る
+1. [Google Cloud Console](https://console.cloud.google.com/)を開く
+2. 上の「プロジェクトを選択」をクリック
+3. 「新しいプロジェクト」をクリック
+4. プロジェクト名: `TikTok Analytics`（好きな名前でOK）
+5. 「作成」をクリック
+
+#### OAuth認証を設定
+1. 左のメニューから「APIとサービス」→「認証情報」
+2. 「+ 認証情報を作成」→「OAuth クライアント ID」
+3. 「同意画面を構成」が出たら設定：
+   - User Type: 「外部」を選択
+   - アプリ名: `TikTok Analytics Tool`
+   - ユーザーサポートメール: あなたのメールアドレス
+   - デベロッパーの連絡先: あなたのメールアドレス
+4. もう一度「認証情報を作成」→「OAuth クライアント ID」
+5. 以下を設定：
+   - アプリケーションの種類: `ウェブアプリケーション`
+   - 名前: `TikTok Analytics`
+   
+#### 重要な設定
+**承認済みのJavaScript生成元**に追加：
+```
+http://localhost:5173
+http://localhost:3000
+https://あなたのアプリ名.vercel.app
 ```
 
-**🔄 TikTok API自動切り替えについて:**
-- `VITE_TIKTOK_CLIENT_KEY`が未設定 → **モックデータ**を使用
-- `VITE_TIKTOK_CLIENT_KEY`を設定 → **本番TikTok API**に自動切り替え
-- コード変更は一切不要！
+**承認済みのリダイレクトURI**に追加：
+```
+https://あなたのSupabaseプロジェクトID.supabase.co/auth/v1/callback
+```
 
-### 4. データベースセットアップ
+6. 「作成」をクリック
+7. **クライアントID**と**クライアントシークレット**をメモ
 
-Supabaseプロジェクトで `FINAL_DATABASE_SETUP.sql` を実行してテーブルを作成
+### 2. SupabaseでGoogle認証を有効化
+1. Supabaseダッシュボードで「Authentication」→「Providers」
+2. 「Google」を見つけて「Enable」をON
+3. GoogleのクライアントIDとシークレットを貼り付け
+4. 「Save」をクリック
 
-### 5. 開発サーバー起動
+---
+
+## 📱 ステップ4: TikTok APIのセットアップ
+
+TikTokのデータを取得できるようにします。
+
+### 1. TikTok Developerアカウントの作成
+1. [TikTok for Developers](https://developers.tiktok.com/)にアクセス
+2. 「Register」をクリックしてアカウント作成
+3. メールアドレスを確認
+
+### 2. アプリを作成
+1. 「Manage apps」→「Create app」
+2. 以下を入力：
+   - **App name**: `TikTok Analytics Tool`
+   - **App description**: TikTokデータ分析ツール
+   - **Category**: Analytics
+
+### 3. 必要な権限を追加
+「Add products」から以下を追加：
+- **Login Kit**: ユーザーログイン用
+- **Display API**: データ取得用
+
+### 4. 設定を行う
+#### Redirect URIs（リダイレクトURI）を追加：
+```
+http://localhost:5173/auth/tiktok/callback
+https://あなたのアプリ名.vercel.app/auth/tiktok/callback
+```
+
+### 5. 必要な情報をメモ
+- **Client Key**: アプリのID
+- **Client Secret**: アプリの秘密の鍵
+
+⚠️ **注意**: Client Secretは他の人に見せないでください！
+
+---
+
+## ⚙️ ステップ5: 環境変数の設定
+
+アプリに必要な設定を書きます。
+
+### 1. `.env`ファイルを作る
+プロジェクトフォルダに`.env`ファイルを作成し、以下を入力：
 
 ```bash
+# Supabaseの設定
+VITE_SUPABASE_URL=あなたのSupabaseプロジェクトURL
+VITE_SUPABASE_ANON_KEY=あなたのSupabase匿名キー
+
+# TikTok APIの設定
+VITE_TIKTOK_CLIENT_KEY=あなたのTikTokクライアントキー
+VITE_TIKTOK_CLIENT_SECRET=あなたのTikTokクライアントシークレット
+VITE_TIKTOK_REDIRECT_URI=http://localhost:5173/auth/tiktok/callback
+```
+
+💡 **例**：
+```bash
+VITE_SUPABASE_URL=https://bijyeptqgqkbrbopelyz.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+VITE_TIKTOK_CLIENT_KEY=awx1234567890
+VITE_TIKTOK_CLIENT_SECRET=abcdef123456789...
+VITE_TIKTOK_REDIRECT_URI=http://localhost:5173/auth/tiktok/callback
+```
+
+⚠️ **重要**: `.env`ファイルはGitHubにアップロードしないでください！
+
+---
+
+## 💻 ステップ6: ローカルでの開発
+
+### 1. 開発サーバーを起動
+```bash
+# プロジェクトフォルダで実行
 npm run dev
 ```
 
-## 🚀 デプロイ
+### 2. ブラウザで確認
+1. ブラウザを開く
+2. `http://localhost:5173`にアクセス
+3. アプリが表示されたら成功！
 
-### Vercel デプロイ
-
-1. GitHubにプッシュ
-2. Vercelでプロジェクトをインポート
-3. 環境変数を設定
-4. デプロイ実行
-
-### TikTok API本番設定（オプション）
-
-#### 🔧 開発フェーズ
-1. **そのまま開発開始！** - モックデータで全機能が動作します
-2. 実際のUIとワークフローを確認
-3. 開発完了後に本番APIに切り替え
-
-#### 🚀 本番切り替え手順
-1. [TikTok for Developers](https://developers.tiktok.com/) でアプリ作成
-2. Client Key を取得
-3. 環境変数 `VITE_TIKTOK_CLIENT_KEY` に設定
-4. **自動的に本番APIに切り替わります！**
-
-#### 🌐 Vercel デプロイ時
+### 3. 開発中によく使うコマンド
 ```bash
-# Vercelの環境変数設定
-vercel env add VITE_TIKTOK_CLIENT_KEY production
+# 開発サーバーを起動
+npm run dev
+
+# アプリをビルド（本番用ファイルを作る）
+npm run build
+
+# ビルドしたファイルを確認
+npm run preview
+
+# コードのチェック
+npm run lint
 ```
 
-## 📁 プロジェクト構造
+---
 
-```
-src/
-├── components/          # 再利用可能なコンポーネント
-├── contexts/           # React Context (認証等)
-├── hooks/              # カスタムフック (useTikTokData等)
-├── lib/                # ライブラリ設定
-│   └── tiktok/         # 🔄 TikTok API自動切り替えシステム
-│       ├── index.ts    # - メインクライアント（自動切り替え）
-│       ├── mock-client.ts    # - モックデータクライアント
-│       └── api-client.ts     # - 本番APIクライアント
-├── pages/              # ページコンポーネント
-├── types/              # TypeScript型定義
-│   └── tiktok-api.ts   # - TikTok API統一インターフェース
-└── data/               # モックデータ
+## 🚀 ステップ7: Vercelへのデプロイ
 
-supabase/
-└── functions/          # Edge Functions (TikTok OAuth)
-```
+アプリをインターネットに公開します。
 
-## 🗄 データベーススキーマ
-
-主要テーブル:
-- `users` - ユーザー情報
-- `tiktok_accounts` - TikTokアカウント連携情報
-- `tiktok_videos` - 動画データ
-- `oauth_states` - OAuth状態管理
-
-## 📊 使用方法
-
-### 🚀 すぐに始める（モックデータ）
-1. **Google認証**: Googleアカウントでログイン
-2. **ダッシュボード**: 自動生成されたモックデータで動作確認
-3. **日付フィルター**: 7日/14日/21日/カスタムで期間分析
-4. **設定 > API設定**: 現在のモード（モックデータ/本番API）を確認
-
-### 🔄 本番APIに切り替え
-1. **設定 > API設定** タブを開く
-2. **Client Key** を入力
-3. **保存** → 自動的に本番APIに切り替わります
-4. **TikTok連携** タブでOAuth認証を完了
-
-### 📊 データ分析
-- **サマリーカード**: 総再生数、いいね数、エンゲージメント率
-- **グラフ表示**: 各メトリクスの時系列推移
-- **動画テーブル**: 個別動画の詳細パフォーマンス
-
-## 🆕 新機能: TikTok API自動切り替えシステム
-
-### ✨ 特徴
-- **🔄 環境変数による自動判定**: APIキーの有無で開発/本番モードを自動切り替え
-- **📊 リアルなモックデータ**: 実際のTikTok APIと同じインターフェースで開発可能
-- **🚀 ワンクリック切り替え**: 設定ページでAPIキーを入力するだけで本番APIに移行
-- **🛡️ 型安全性**: TypeScriptで統一されたAPIインターフェース
-
-### 🔧 技術詳細
-```typescript
-// 自動切り替えの仕組み
-export class TikTokClient {
-  constructor() {
-    this.mode = this.detectMode(); // APIキーの有無を自動検出
-    this.client = this.mode === 'production' 
-      ? new TikTokAPIClient() 
-      : new TikTokMockClient();
-  }
-}
-
-// 使用者は同じメソッドを使用
-const client = new TikTokClient();
-const data = await client.getVideoAnalytics(params); // モード関係なく同じ
-```
-
-## 🔧 開発コマンド
-
+### 1. GitHubにコードをアップロード
 ```bash
-npm run dev          # 開発サーバー起動
-npm run build        # プロダクションビルド
-npm run preview      # ビルド版のプレビュー
-npm run lint         # ESLint実行
+# 変更をすべて追加
+git add .
+
+# 変更を記録
+git commit -m "初回コミット"
+
+# GitHubにアップロード
+git push origin main
 ```
 
-## 📝 ライセンス
+### 2. Vercelでデプロイ
+1. [Vercel](https://vercel.com)にログイン
+2. 「New Project」をクリック
+3. GitHubリポジトリを選択
+4. 「Import」をクリック
 
-MIT License
+### 3. 環境変数を設定
+「Environment Variables」で以下を追加：
 
-## 🤝 貢献
+| 名前 | 値 |
+|------|-----|
+| VITE_SUPABASE_URL | あなたのSupabaseプロジェクトURL |
+| VITE_SUPABASE_ANON_KEY | あなたのSupabase匿名キー |
+| VITE_TIKTOK_CLIENT_KEY | あなたのTikTokクライアントキー |
+| VITE_TIKTOK_CLIENT_SECRET | あなたのTikTokクライアントシークレット |
+| VITE_TIKTOK_REDIRECT_URI | https://あなたのアプリ名.vercel.app/auth/tiktok/callback |
 
-Issues やPull Requests を歓迎します。
+### 4. デプロイ
+「Deploy」をクリックして待つ（3〜5分）
 
-## 📞 サポート
+### 5. 公開URLを確認
+デプロイが完了したら、`https://あなたのアプリ名.vercel.app`でアクセスできます！
 
-問題が発生した場合は Issues でお知らせください。
+### 6. 設定の更新
+#### Google Cloud Console
+1. 認証情報の設定に戻る
+2. 承認済みのJavaScript生成元に本番URLを追加：
+   ```
+   https://あなたのアプリ名.vercel.app
+   ```
+
+#### TikTok Developer
+1. アプリ設定に戻る
+2. Redirect URIに本番URLを追加：
+   ```
+   https://あなたのアプリ名.vercel.app/auth/tiktok/callback
+   ```
+
+---
+
+## 🆘 困ったときは
+
+### よくあるエラーと解決方法
+
+#### 1. 「npm: command not found」と表示される
+**解決方法**: Node.jsをインストールしてください
+
+#### 2. Googleログインができない
+**確認すること**:
+- Google Cloud ConsoleのリダイレクトURIが正しいか
+- SupabaseのGoogle認証が有効になっているか
+- クライアントIDとシークレットが正しいか
+
+#### 3. TikTokデータが表示されない
+**確認すること**:
+- TikTok APIキーが正しいか
+- リダイレクトURIが設定されているか
+- `.env`ファイルの内容が正しいか
+
+#### 4. Vercelでビルドエラー
+**確認すること**:
+- 環境変数がすべて設定されているか
+- package.jsonのスクリプトが正しいか
+
+### デバッグのコツ
+1. **ブラウザの開発者ツール**を使う
+   - F12キーを押す
+   - 「Console」タブでエラーを確認
+
+2. **ログを確認**
+   - Vercelのダッシュボードで「Functions」タブ
+   - Supabaseのダッシュボードで「Logs」
+
+---
+
+## ✅ 必要な情報チェックリスト
+
+開発を始める前に、以下の情報がすべて揃っているか確認してください：
+
+### Supabase
+- [ ] プロジェクトURL (`https://xxxxx.supabase.co`)
+- [ ] 匿名キー (anon key)
+- [ ] データベースパスワード
+
+### Google Cloud
+- [ ] クライアントID
+- [ ] クライアントシークレット
+- [ ] プロジェクトID
+
+### TikTok API
+- [ ] クライアントキー
+- [ ] クライアントシークレット
+- [ ] アプリID
+
+### Vercel
+- [ ] アカウント
+- [ ] プロジェクト名
+- [ ] 本番URL
+
+### GitHub
+- [ ] アカウント
+- [ ] リポジトリURL
+
+---
+
+## 📁 プロジェクト構成
+
+```
+tiktok-analytics-tool/
+├── src/                    # ソースコード
+│   ├── components/         # 部品（ボタンなど）
+│   ├── pages/             # ページ
+│   ├── lib/               # 便利な機能
+│   └── App.tsx            # メインアプリ
+├── public/                # 画像など
+├── supabase/              # Supabase設定
+│   └── functions/         # サーバー機能
+├── .env                   # 環境変数（秘密！）
+├── package.json           # プロジェクト設定
+├── vercel.json           # Vercel設定
+└── README.md             # このファイル
+```
+
+---
+
+## 🎉 完成！
+
+おめでとうございます！これですべての設定が完了しました。
+
+### 次のステップ
+1. アプリをカスタマイズする
+2. 新しい機能を追加する
+3. デザインを変更する
+
+### 役立つリンク
+- [React公式ドキュメント](https://ja.react.dev/)
+- [Supabaseドキュメント](https://supabase.com/docs)
+- [Vercelドキュメント](https://vercel.com/docs)
+- [TikTok API](https://developers.tiktok.com/doc/overview)
+
+---
+
+## 📝 メモ欄
+
+ここに自分用のメモを書いてください：
+
+```
+例：
+- Supabase URL: https://bijyeptqgqkbrbopelyz.supabase.co
+- Vercel URL: https://my-tiktok-app.vercel.app
+- 作成日: 2024/12/28
+```
+
+---
+
+## 🤝 サポート
+
+質問がある場合は：
+1. このREADMEをもう一度読む
+2. エラーメッセージをGoogleで検索
+3. ChatGPTやClaudeに質問する
+4. 開発者に連絡する
+
+頑張ってください！ 🚀
