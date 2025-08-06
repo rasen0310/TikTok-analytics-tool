@@ -8,8 +8,8 @@ import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { CompetitorAnalysis } from './pages/CompetitorAnalysis';
 import { AIReport } from './pages/AIReport';
-import { Settings } from './pages/Settings';
 import { DataTable } from './pages/DataTable';
+import { Settings } from './pages/Settings';
 import { TikTokCallback } from './pages/TikTokCallback';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 
