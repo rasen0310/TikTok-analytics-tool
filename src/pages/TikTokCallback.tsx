@@ -20,29 +20,29 @@ export const TikTokCallback: React.FC = () => {
       if (errorParam) {
         const errorMessage = errorDescription || errorParam;
         setError(`TikTok認証がキャンセルされました: ${errorMessage}`);
-        setTimeout(() => navigate('/settings'), 3000);
+        setTimeout(() => navigate('/dashboard'), 3000);
         return;
       }
 
       // コードまたはstateが無い場合
       if (!code || !state) {
         setError('認証パラメータが不正です');
-        setTimeout(() => navigate('/settings'), 3000);
+        setTimeout(() => navigate('/dashboard'), 3000);
         return;
       }
 
       try {
         await handleCallback(code, state);
         
-        // 成功時は設定ページにリダイレクト
+        // 成功時はダッシュボードにリダイレクト
         setTimeout(() => {
-          navigate('/settings', { replace: true });
+          navigate('/dashboard', { replace: true });
         }, 1500);
         
       } catch (error) {
         console.error('TikTok OAuth callback error:', error);
         setError(error instanceof Error ? error.message : 'TikTok認証に失敗しました');
-        setTimeout(() => navigate('/settings'), 3000);
+        setTimeout(() => navigate('/dashboard'), 3000);
       }
     };
 
@@ -71,7 +71,7 @@ export const TikTokCallback: React.FC = () => {
             </Typography>
           </Alert>
           <Typography variant="body2" color="textSecondary">
-            3秒後に設定ページに戻ります...
+            3秒後にダッシュボードに戻ります...
           </Typography>
         </Box>
       </Container>

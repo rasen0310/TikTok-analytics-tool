@@ -4,42 +4,40 @@ import {
   Box,
   Typography,
   Paper,
-  TextField,
+  Avatar,
+  Chip,
   Stack,
   Alert,
-  Avatar,
   Divider,
+  IconButton,
   Button,
-  Chip,
-  CircularProgress,
+  TextField,
 } from '@mui/material';
 import {
   Person as PersonIcon,
   Email as EmailIcon,
   Google as GoogleIcon,
-  Link as LinkIcon,
-  LinkOff as LinkOffIcon,
+  AccountCircle as AccountCircleIcon,
   Verified as VerifiedIcon,
+  ContentCopy as CopyIcon,
+  Refresh as RefreshIcon,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { useTikTokAuth } from '../contexts/TikTokAuthContext';
 
 export const Settings: React.FC = () => {
-  const { user } = useAuth();
-  const { 
-    isConnected, 
-    user: tiktokUser, 
-    loading: tiktokLoading, 
-    error: tiktokError,
-    connectTikTok, 
-    disconnectTikTok 
-  } = useTikTokAuth();
+  const { user, logout } = useAuth();
+
+  const handleCopyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    console.log(`${label} copied to clipboard: ${text}`);
+  };
 
   if (!user) {
     return (
       <Container maxWidth="md">
         <Box sx={{ py: 4 }}>
-          <Alert severity="warning">
+          <Alert severity="warning" sx={{ mb: 3 }}>
             ユーザー情報を読み込めませんでした。再度ログインしてください。
           </Alert>
         </Box>
@@ -50,240 +48,263 @@ export const Settings: React.FC = () => {
   return (
     <Container maxWidth="md">
       <Box sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', mb: 4 }}>
-          設定
-        </Typography>
+        {/* ヘッダー */}
+        <Box sx={{ mb: 4, textAlign: 'center' }}>
+          <Typography variant="h3" gutterBottom sx={{ 
+            fontWeight: 'bold',
+            background: 'linear-gradient(45deg, #FE2C55, #25F4EE)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}>
+            設定
+          </Typography>
+          <Typography variant="subtitle1" color="textSecondary">
+            アカウント情報と認証設定の管理
+          </Typography>
+        </Box>
 
-        <Paper sx={{ p: 4 }}>
-          <Box sx={{ mb: 4, textAlign: 'center' }}>
+        {/* メインプロフィールセクション */}
+        <Paper elevation={3} sx={{ p: 4, mb: 3, borderRadius: 3 }}>
+          {/* プロフィールヘッダー */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
             <Avatar 
               sx={{ 
-                width: 80, 
-                height: 80, 
-                mx: 'auto', 
-                mb: 2,
+                width: 100, 
+                height: 100, 
+                mr: 3,
                 backgroundColor: '#FE2C55',
-                fontSize: '2rem'
+                fontSize: '2.5rem',
+                border: '4px solid #fff',
+                boxShadow: '0 4px 20px rgba(254, 44, 85, 0.3)'
               }}
             >
               {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
             </Avatar>
-            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-              {user.name}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-              <GoogleIcon sx={{ color: '#4285F4' }} />
-              <Typography variant="body2" color="textSecondary">
-                Google アカウントで認証済み
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+                {user.name}
               </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <GoogleIcon sx={{ color: '#4285F4', fontSize: 20 }} />
+                <Typography variant="body1" color="textSecondary">
+                  Google アカウントで認証済み
+                </Typography>
+                <VerifiedIcon sx={{ color: '#4CAF50', fontSize: 18 }} />
+              </Box>
+              <Stack direction="row" spacing={1}>
+                <Chip 
+                  label="アクティブ" 
+                  color="success" 
+                  size="small"
+                  sx={{ fontWeight: 'bold' }}
+                />
+                <Chip 
+                  label="認証済み" 
+                  color="primary" 
+                  size="small"
+                  variant="outlined"
+                />
+              </Stack>
             </Box>
           </Box>
 
           <Divider sx={{ my: 3 }} />
 
+          {/* アカウント詳細情報 */}
           <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 'bold' }}>
-            アカウント情報
+            <AccountCircleIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+            アカウント詳細
           </Typography>
 
-          <Alert severity="info" sx={{ mb: 3 }}>
-            Google OAuth認証により取得された情報です。これらの情報はGoogleアカウントと連動しており、変更はGoogleアカウント設定から行ってください。
+          <Stack spacing={3}>
+            {/* 表示名 */}
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <PersonIcon sx={{ mr: 1, color: '#FE2C55' }} />
+                <Typography variant="subtitle1" fontWeight="bold">
+                  表示名
+                </Typography>
+                <IconButton 
+                  size="small" 
+                  onClick={() => handleCopyToClipboard(user.name, '表示名')}
+                  sx={{ ml: 'auto', color: '#666' }}
+                >
+                  <CopyIcon fontSize="small" />
+                </IconButton>
+              </Box>
+              <TextField
+                fullWidth
+                value={user.name}
+                disabled
+                variant="outlined"
+                sx={{
+                  '& .MuiInputBase-input': {
+                    fontSize: '1.1rem',
+                    fontWeight: 'medium',
+                  },
+                }}
+                helperText="Googleアカウントに登録されている名前"
+              />
+            </Box>
+
+            {/* メールアドレス */}
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <EmailIcon sx={{ mr: 1, color: '#FE2C55' }} />
+                <Typography variant="subtitle1" fontWeight="bold">
+                  メールアドレス
+                </Typography>
+                <IconButton 
+                  size="small" 
+                  onClick={() => handleCopyToClipboard(user.email, 'メールアドレス')}
+                  sx={{ ml: 'auto', color: '#666' }}
+                >
+                  <CopyIcon fontSize="small" />
+                </IconButton>
+              </Box>
+              <TextField
+                fullWidth
+                value={user.email}
+                disabled
+                variant="outlined"
+                sx={{
+                  '& .MuiInputBase-input': {
+                    fontSize: '1.1rem',
+                    fontWeight: 'medium',
+                  },
+                }}
+                helperText="プライマリーメールアドレス"
+              />
+            </Box>
+
+            {/* ユーザーID */}
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <AccountCircleIcon sx={{ mr: 1, color: '#FE2C55' }} />
+                <Typography variant="subtitle1" fontWeight="bold">
+                  ユーザーID
+                </Typography>
+                <IconButton 
+                  size="small" 
+                  onClick={() => handleCopyToClipboard(user.id, 'ユーザーID')}
+                  sx={{ ml: 'auto', color: '#666' }}
+                >
+                  <CopyIcon fontSize="small" />
+                </IconButton>
+              </Box>
+              <TextField
+                fullWidth
+                value={user.id}
+                disabled
+                variant="outlined"
+                sx={{
+                  '& .MuiInputBase-input': {
+                    fontSize: '0.9rem',
+                    fontFamily: 'monospace',
+                  },
+                }}
+                helperText="システム内部で使用される一意の識別子"
+              />
+            </Box>
+          </Stack>
+        </Paper>
+
+        {/* 認証情報カード */}
+        <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+            <GoogleIcon sx={{ mr: 1, verticalAlign: 'middle', color: '#4285F4' }} />
+            認証情報
+          </Typography>
+          
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Google OAuth認証が正常に接続されています
           </Alert>
 
-          <Stack spacing={3}>
-            <TextField
-              fullWidth
-              label="表示名"
-              value={user.name}
-              disabled
-              InputProps={{
-                startAdornment: <PersonIcon sx={{ mr: 1, color: 'action.active' }} />,
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box>
+              <Typography variant="body1" fontWeight="medium">
+                認証状態: 
+                <Chip 
+                  label="接続済み" 
+                  color="success" 
+                  size="small" 
+                  sx={{ ml: 1 }}
+                />
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                最終ログイン: 現在のセッション
+              </Typography>
+            </Box>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<RefreshIcon />}
+              sx={{
+                color: '#FE2C55',
+                borderColor: '#FE2C55',
+                '&:hover': {
+                  borderColor: '#E01E45',
+                  backgroundColor: 'rgba(254, 44, 85, 0.04)',
+                },
               }}
-              helperText="Googleアカウントに登録されている名前"
-            />
-            
-            <TextField
-              fullWidth
-              label="メールアドレス"
-              value={user.email}
-              disabled
-              InputProps={{
-                startAdornment: <EmailIcon sx={{ mr: 1, color: 'action.active' }} />,
-              }}
-              helperText="Googleアカウントのメールアドレス"
-            />
-
-            <TextField
-              fullWidth
-              label="ユーザーID"
-              value={user.id}
-              disabled
-              helperText="システム内部で使用される一意のID"
-            />
-          </Stack>
-
-          <Box sx={{ mt: 4, p: 3, backgroundColor: 'rgba(66, 133, 244, 0.04)', borderRadius: 2 }}>
-            <Typography variant="body2" color="textSecondary" align="center">
-              <strong>プライバシーについて:</strong> 
-              <br />
-              アカウント情報の変更や削除をご希望の場合は、Googleアカウント設定から行ってください。
-              <br />
-              アプリケーションからアカウントを削除したい場合は、ログアウト後に再度アクセスしないことで、
-              <br />
-              自動的にアカウント情報は保持されなくなります。
-            </Typography>
+            >
+              更新
+            </Button>
           </Box>
         </Paper>
 
-        {/* TikTok連携セクション */}
-        <Paper sx={{ p: 4, mt: 3 }}>
-          <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 'bold' }}>
-            TikTok連携
+        {/* プライバシー・セキュリティ情報 */}
+        <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+            プライバシー・セキュリティ
           </Typography>
+          
+          <Alert severity="info" sx={{ mb: 2 }}>
+            <Typography variant="body2">
+              アカウント情報はGoogleから安全に取得され、暗号化されて保護されています
+            </Typography>
+          </Alert>
 
-          {tiktokError && (
-            <Alert severity="error" sx={{ mb: 3 }}>
-              {tiktokError}
-            </Alert>
-          )}
+          <Typography variant="body2" color="textSecondary" sx={{ lineHeight: 1.8 }}>
+            <strong>データ保護について:</strong>
+            <br />
+            • アカウント情報の変更はGoogleアカウント設定から行ってください
+            <br />
+            • すべてのデータは暗号化されて安全に保存されています
+            <br />
+            • ログアウト後はローカルに保存されたデータが自動的に削除されます
+            <br />
+            • 当アプリケーションではパスワード情報は一切保存していません
+          </Typography>
+        </Paper>
 
-          {isConnected && tiktokUser ? (
-            <>
-              <Alert severity="success" sx={{ mb: 3 }}>
-                TikTokアカウントが正常に連携されています
-              </Alert>
-              
-              <Box sx={{ mb: 4, textAlign: 'center' }}>
-                <Avatar 
-                  src={tiktokUser.avatar_url_100}
-                  sx={{ 
-                    width: 80, 
-                    height: 80, 
-                    mx: 'auto', 
-                    mb: 2,
-                    border: '3px solid #FE2C55'
-                  }}
-                >
-                  {tiktokUser.display_name?.charAt(0).toUpperCase()}
-                </Avatar>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                    {tiktokUser.display_name}
-                  </Typography>
-                  {tiktokUser.is_verified && (
-                    <VerifiedIcon sx={{ color: '#20D5EC', fontSize: 20 }} />
-                  )}
-                </Box>
-                <Typography variant="body2" color="textSecondary">
-                  @{tiktokUser.open_id}
-                </Typography>
-              </Box>
-
-              <Stack spacing={2} sx={{ mb: 3 }}>
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <Chip 
-                    label={`フォロワー: ${tiktokUser.follower_count?.toLocaleString() || 0}`}
-                    variant="outlined"
-                    size="small"
-                  />
-                  <Chip 
-                    label={`フォロー中: ${tiktokUser.following_count?.toLocaleString() || 0}`}
-                    variant="outlined"
-                    size="small"
-                  />
-                  <Chip 
-                    label={`いいね: ${tiktokUser.likes_count?.toLocaleString() || 0}`}
-                    variant="outlined"
-                    size="small"
-                  />
-                  <Chip 
-                    label={`動画数: ${tiktokUser.video_count?.toLocaleString() || 0}`}
-                    variant="outlined"
-                    size="small"
-                  />
-                </Box>
-                
-                {tiktokUser.bio_description && (
-                  <TextField
-                    fullWidth
-                    label="プロフィール"
-                    value={tiktokUser.bio_description}
-                    disabled
-                    multiline
-                    maxRows={3}
-                  />
-                )}
-              </Stack>
-
-              <Box sx={{ textAlign: 'center' }}>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={disconnectTikTok}
-                  disabled={tiktokLoading}
-                  startIcon={tiktokLoading ? <CircularProgress size={16} /> : <LinkOffIcon />}
-                  sx={{
-                    borderColor: '#FE2C55',
-                    color: '#FE2C55',
-                    '&:hover': {
-                      borderColor: '#E01E45',
-                      backgroundColor: 'rgba(254, 44, 85, 0.04)',
-                    },
-                  }}
-                >
-                  {tiktokLoading ? '処理中...' : 'TikTok連携を解除'}
-                </Button>
-              </Box>
-            </>
-          ) : (
-            <>
-              <Alert severity="info" sx={{ mb: 3 }}>
-                TikTokアカウントを連携すると、実際のデータを使用した分析が可能になります。
-                現在はモックデータを使用しています。
-              </Alert>
-              
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="body1" gutterBottom sx={{ mb: 3 }}>
-                  TikTokアカウントと連携して、リアルタイムデータ分析を始めましょう
-                </Typography>
-                
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={connectTikTok}
-                  disabled={tiktokLoading}
-                  startIcon={tiktokLoading ? <CircularProgress size={20} color="inherit" /> : <LinkIcon />}
-                  sx={{
-                    backgroundColor: '#FE2C55',
-                    color: 'white',
-                    py: 2,
-                    px: 4,
-                    fontSize: '1.1rem',
-                    fontWeight: 'bold',
-                    '&:hover': {
-                      backgroundColor: '#E01E45',
-                    },
-                    '&:disabled': {
-                      backgroundColor: 'grey.400',
-                    },
-                  }}
-                >
-                  {tiktokLoading ? 'TikTokに接続中...' : 'TikTokアカウントを連携'}
-                </Button>
-              </Box>
-
-              <Box sx={{ mt: 3, p: 3, backgroundColor: 'rgba(254, 44, 85, 0.04)', borderRadius: 2 }}>
-                <Typography variant="body2" color="textSecondary" align="center">
-                  <strong>連携について:</strong>
-                  <br />
-                  • 基本プロフィール情報とパブリック統計のみアクセスします
-                  <br />
-                  • 動画の投稿や編集は一切行いません
-                  <br />
-                  • 連携はいつでも解除できます
-                </Typography>
-              </Box>
-            </>
-          )}
+        {/* アカウント操作 */}
+        <Paper elevation={2} sx={{ p: 3, borderRadius: 2, backgroundColor: '#fafafa' }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+            アカウント操作
+          </Typography>
+          
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Button
+              variant="contained"
+              color="error"
+              startIcon={<LogoutIcon />}
+              onClick={logout}
+              sx={{
+                backgroundColor: '#f44336',
+                '&:hover': {
+                  backgroundColor: '#d32f2f',
+                },
+              }}
+            >
+              ログアウト
+            </Button>
+            
+            <Typography variant="caption" color="textSecondary">
+              ログアウトするとローカルに保存されたデータが削除されます
+            </Typography>
+          </Box>
         </Paper>
       </Box>
     </Container>

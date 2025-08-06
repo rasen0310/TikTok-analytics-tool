@@ -181,6 +181,14 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ videos, dateRang
           weight: 'bold' as const,
         },
       },
+      tooltip: {
+        mode: 'index' as const,
+        intersect: false,
+      },
+    },
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
     },
     scales: {
       y: {
